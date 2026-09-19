@@ -52,7 +52,15 @@ function head(l,title,desc,path,image=PRODUCT[0],schema=''){
   const url=absolute(l,path),t=T[l];
   return `<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><meta name="robots" content="index,follow,max-image-preview:large"><link rel="canonical" href="${url}">${LANGS.map(x=>`<link rel="alternate" hreflang="${x}" href="${absolute(x,path)}">`).join('')}<link rel="alternate" hreflang="x-default" href="${absolute('fr',path)}"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><link rel="preconnect" href="https://digitronics.ma" crossorigin><meta name="theme-color" content="#171817"><meta property="og:type" content="website"><meta property="og:site_name" content="BADAWI"><meta property="og:locale" content="${esc(t.locale)}"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${url}"><meta property="og:image" content="${image}"><meta property="og:image:alt" content="BADAWI BF65INOXP"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${esc(title)}"><meta name="twitter:description" content="${esc(desc)}"><meta name="twitter:image" content="${image}"><link rel="stylesheet" href="/assets/${CSS_FILE}"><script type="module" src="/assets/${JS_FILE}"></script>${schema?`<script type="application/ld+json">${schema}</script>`:''}`;
 }
-const page=(l,title,desc,path,body,current='',schema='')=>`<!doctype html><html lang="${l}" dir="${T[l].dir}"><head>${head(l,title,desc,path,PRODUCT[0],schema)}</head><body>${header(l,current,path)}<main id="main">${body}</main>${footer(l)}<a class="float" data-track="whatsapp_click" data-destination="whatsapp" aria-label="${esc('WA — '+T[l].whatsapp)}" href="${wa(l,'general')}" rel="noopener">WA</a></body></html>`;
+function imagePreload(path){
+  const media=path===''?FOOD[2]:path==='products/bf65inoxp/'?PRODUCT_DATA.media.product[0]:path==='about/'?FOOD[0]:null;
+  if(!media)return '';
+  const src=typeof media==='string'?media:media.src;
+  const srcset=typeof media==='string'?'':(media.srcset||[]).map(([w,u])=>`${u} ${w}w`).join(', ');
+  const sizes=path==='products/bf65inoxp/'?'(max-width:900px) 100vw, 58vw':'100vw';
+  return `<link rel="preload" as="image" href="${src}"${srcset?` imagesrcset="${srcset}" imagesizes="${sizes}"`:''} fetchpriority="high" referrerpolicy="no-referrer">`;
+}
+const page=(l,title,desc,path,body,current='',schema='')=>`<!doctype html><html lang="${l}" dir="${T[l].dir}"><head>${head(l,title,desc,path,PRODUCT[0],schema)}${imagePreload(path)}</head><body>${header(l,current,path)}<main id="main">${body}</main>${footer(l)}<a class="float" data-track="whatsapp_click" data-destination="whatsapp" aria-label="${esc('WA — '+T[l].whatsapp)}" href="${wa(l,'general')}" rel="noopener">WA</a></body></html>`;
 
 
 const localized=(l,values)=>values[l]||values.en||values.fr;

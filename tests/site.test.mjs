@@ -46,6 +46,15 @@ test('product page has canonical, same-path hreflang and parseable JSON-LD', asy
   assert.equal(data[0].model,'BF65INOXP');
 });
 
+test('above-the-fold hero images are preloaded responsively', async () => {
+  const home = await readFile(root + 'fr/index.html','utf8');
+  const product = await readFile(root + 'fr/products/bf65inoxp/index.html','utf8');
+  const about = await readFile(root + 'fr/about/index.html','utf8');
+  assert.match(home,/<link rel="preload" as="image" href="https:\/\/digitronics\.ma\/landing\/badawi\/badawi-food-shared-table\.webp"[^>]*fetchpriority="high"/);
+  assert.match(product,/<link rel="preload" as="image" href="https:\/\/digitronics\.ma\/r2\/products\/BF65INOXP\/[^\"]+\.w1080\.webp"[^>]*imagesrcset="[^"]+ 640w[^\"]*"[^>]*imagesizes="\(max-width:900px\) 100vw, 58vw"/);
+  assert.match(about,/<link rel="preload" as="image" href="https:\/\/digitronics\.ma\/landing\/badawi\/badawi-food-roast-chicken\.webp"/);
+});
+
 test('Arabic pages are RTL and Arabic forms are localized', async () => {
   const home = await readFile(root + 'ar/index.html','utf8');
   const form = await readFile(root + 'ar/support/register/index.html','utf8');
