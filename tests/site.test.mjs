@@ -132,8 +132,10 @@ test('product WhatsApp links carry the correct localized model and page', async 
 test('homepages include a localized WhatsApp call to action', async () => {
   for (const language of languages) {
     const html = await readFile(root + language + '/index.html','utf8');
-    assert.match(html,/class="btn whatsapp whatsapp-btn" href="https:\/\/wa\.me\/212664999733\?text=/);
-    assert.match(html,/data-track="whatsapp_click" data-destination="Digitronics WhatsApp" data-product="BF65INOXP"/);
+    assert.match(html,/class="btn whatsapp home-hero-whatsapp whatsapp-btn" href="https:\/\/wa\.me\/212664999733\?text=/);
+    assert.match(html,/data-track="whatsapp_click" data-destination="Digitronics WhatsApp"/);
+    const hero=html.match(/<section class="home-hero">([\s\S]*?)<\/section>/)?.[1]||'';
+    assert.doesNotMatch(hero,/data-product="BF65INOXP"[^>]*href="https:\/\/wa\.me/);
     assert.doesNotMatch(html,/class="float"/,'homepage should not duplicate the hero WhatsApp action');
   }
 });
@@ -186,7 +188,7 @@ test('above-the-fold hero images are preloaded responsively', async () => {
   const home = await readFile(root + 'fr/index.html','utf8');
   const product = await readFile(root + 'fr/products/bf65inoxp/index.html','utf8');
   const about = await readFile(root + 'fr/about/index.html','utf8');
-  assert.match(home,/<link rel="preload" as="image" href="https:\/\/digitronics\.ma\/landing\/badawi\/badawi-food-shared-table\.webp"[^>]*fetchpriority="high"/);
+  assert.match(home,/<link rel="preload" as="image" href="\/home\/v1\/hero-kitchen-1536\.webp"[^>]*imagesrcset="[^"]+ 640w[^\"]*1536\.webp 1536w"[^>]*fetchpriority="high"/);
   assert.match(product,/<link rel="preload" as="image" href="https:\/\/digitronics\.ma\/r2\/products\/BF65INOXP\/[^\"]+\.w1080\.webp"[^>]*imagesrcset="[^"]+ 640w[^\"]*"[^>]*imagesizes="\(max-width:900px\) 100vw, 58vw"/);
   assert.match(about,/<link rel="preload" as="image" href="https:\/\/digitronics\.ma\/landing\/badawi\/badawi-food-roast-chicken\.webp"/);
 });
@@ -296,7 +298,8 @@ test('pages use the official BADAWI FOUR identity assets and metadata', async ()
   assert.match(html, /\/brand\/v1\/badawi-four-logo-reversed\.svg/);
   assert.doesNotMatch(html, /viewBox="0 0 32 40"/);
   const match = html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/);
-  const organization = JSON.parse(match[1]);
+  const graph = JSON.parse(match[1]);
+  const organization = graph['@graph'].find((item)=>item['@type']==='Organization');
   assert.equal(organization.name,'BADAWI FOUR');
   assert.equal(organization.logo,'https://badawifour.com/brand/v1/badawi-four-logo.svg');
   assert.match(await readFile(root + 'index.html','utf8'), /<title>BADAWI FOUR<\/title>/);

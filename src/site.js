@@ -1,3 +1,4 @@
+document.documentElement.classList.add('js');
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const locale=document.documentElement.lang||'fr';
@@ -78,6 +79,58 @@ if(video){
   let started=false,completed=false;
   video.addEventListener('play',()=>{if(!started){started=true;track('video_started',{product:'BF65INOXP'})}});
   video.addEventListener('ended',()=>{if(!completed){completed=true;track('video_completed',{product:'BF65INOXP'})}});
+}
+
+const homeVideo=$('[data-home-video]');
+if(homeVideo){
+  const source=$('source[data-src]',homeVideo);
+  let videoObserver;
+  const loadHomeVideo=()=>{
+    if(!source||source.src)return;
+    source.src=source.dataset.src||'';
+    if(source.src)homeVideo.load();
+    if(videoObserver)videoObserver.disconnect();
+  };
+  if('IntersectionObserver' in window){
+    videoObserver=new IntersectionObserver((entries)=>{
+      if(entries.some((entry)=>entry.isIntersecting))loadHomeVideo();
+    },{rootMargin:'600px 0px'});
+    videoObserver.observe(homeVideo);
+  }else loadHomeVideo();
+  homeVideo.addEventListener('pointerdown',loadHomeVideo,{once:true});
+  homeVideo.addEventListener('focusin',loadHomeVideo,{once:true});
+}
+
+const homeSticky=$('[data-home-sticky]');
+const homeHero=$('.home-hero');
+const homeFinalOffer=$('[data-home-final-offer]');
+if(homeSticky&&homeHero&&homeFinalOffer&&'IntersectionObserver' in window){
+  let heroVisible=true,finalOfferVisible=false;
+  const updateSticky=()=>{homeSticky.hidden=heroVisible||finalOfferVisible};
+  const stickyObserver=new IntersectionObserver((entries)=>{
+    for(const entry of entries){
+      if(entry.target===homeHero)heroVisible=entry.isIntersecting;
+      if(entry.target===homeFinalOffer)finalOfferVisible=entry.isIntersecting;
+    }
+    updateSticky();
+  },{threshold:.05});
+  stickyObserver.observe(homeHero);
+  stickyObserver.observe(homeFinalOffer);
+  updateSticky();
+}
+
+const homePage=$('.home-page');
+const revealItems=homePage?$$(':scope > section.section',homePage):[];
+if(homePage&&revealItems.length&&'IntersectionObserver' in window&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+  const revealObserver=new IntersectionObserver((entries)=>{
+    for(const entry of entries){
+      if(!entry.isIntersecting)continue;
+      entry.target.classList.add('is-visible');
+      revealObserver.unobserve(entry.target);
+    }
+  },{rootMargin:'0px 0px -8% 0px',threshold:.08});
+  for(const item of revealItems)revealObserver.observe(item);
+  requestAnimationFrame(()=>homePage.dataset.motionReady='true');
 }
 
 function initializeForms(){

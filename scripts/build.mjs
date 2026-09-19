@@ -4,13 +4,14 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import sharp from 'sharp';
 
-import { T } from '../src/i18n.mjs';
+import { HOME, T } from '../src/i18n.mjs';
 import { PRODUCTS, RETAILER as RETAILER_INFO } from '../src/catalog.mjs';
 import { GUIDES } from '../src/content.mjs';
 
 const OUT=fileURLToPath(new URL('../dist/',import.meta.url));
 const BRAND_SOURCE=fileURLToPath(new URL('../src/brand/v1/',import.meta.url));
 const BF65CINOX_SOURCE=fileURLToPath(new URL('../src/products/v1/bf65cinox/bf65cinox-master.png',import.meta.url));
+const HOME_SOURCE=fileURLToPath(new URL('../src/home/v1/',import.meta.url));
 const BF65CINOX_WIDTHS=[320,640,960,1122];
 const ORIGIN='https://badawifour.com';
 const PRODUCT_DATA=PRODUCTS[0];
@@ -33,6 +34,16 @@ const BRAND_FILES=[
   'android-chrome-512x512.png',
   'maskable-icon-512x512-dark-bg.png'
 ];
+const HOME_ASSETS=[
+  {name:'hero-kitchen',source:'hero-kitchen-master.png',width:1536,height:1024,sha256:'0786429FCACF033D184F39D187CFB879ACB168DBD6376655C995D017581B321E',widths:[640,960,1440,1536]},
+  {name:'shared-table',source:'shared-table-master.png',width:1536,height:1024,sha256:'214FB28E4E4EE69552E0B1D8138E3B603ED4B64453A658636F2AA9799BE7FC2A',widths:[640,960,1440,1536]},
+  {name:'prep-detail',source:'prep-detail-master.png',width:1122,height:1402,sha256:'A008D10FC300AAE175D2567A51E17C1DC9CE2D1B05A5A33BE033E16F34E10C21',widths:[640,960,1122]}
+];
+const homeMedia=(name)=>{
+  const asset=HOME_ASSETS.find(item=>item.name===name);
+  const width=asset.widths.at(-1);
+  return {src:`/home/v1/${name}-${width}.webp`,srcset:asset.widths.map(size=>[size,`/home/v1/${name}-${size}.webp`]),width:asset.width,height:asset.height};
+};
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const p=(l,x='')=>`/${l}/${x}`.replace(/\/{2,}/g,'/').replace(/(?<!\/)$/,'/');
@@ -57,7 +68,7 @@ const eyebrow=s=>`<p class="eyebrow">${esc(s)}</p>`;
 const responsive=(media,alt,cls='',eager=false,sizes='100vw')=>{
   const src=typeof media==='string'?media:media.src;
   const srcset=typeof media==='string'?'':(media.srcset||[]).map(([w,u])=>`${u} ${w}w`).join(', ');
-  return `<img${cls?` class="${cls}"`:''} src="${src}"${srcset?` srcset="${srcset}" sizes="${sizes}"`:''} alt="${esc(alt)}" loading="${eager?'eager':'lazy'}" decoding="async"${eager?' fetchpriority="high"':''} referrerpolicy="no-referrer">`;
+  return `<img${cls?` class="${cls}"`:''} src="${src}"${srcset?` srcset="${srcset}" sizes="${sizes}"`:''}${typeof media==='object'&&media.width&&media.height?` width="${media.width}" height="${media.height}"`:''} alt="${esc(alt)}" loading="${eager?'eager':'lazy'}" decoding="async"${eager?' fetchpriority="high"':''} referrerpolicy="no-referrer">`;
 };
 const img=(u,a,c='')=>responsive(u,a,c,false);
 const logo=(l,context='header')=>context==='footer'
@@ -72,8 +83,10 @@ function header(l,current='',path=''){
   return `<header><a class="skip" href="#main">${skip}</a><div class="shell nav">${logo(l)}<nav aria-label="Main navigation">${t.nav.map((n,i)=>`<a ${current===i?'aria-current="page"':''} href="${p(l,paths[i])}">${esc(n)}</a>`).join('')}</nav>${langs(l,path)}<button class="menu" type="button" aria-expanded="false" aria-controls="mobile">${esc(t.menu)}</button></div><div id="mobile" hidden>${mobileHome}${mobileNav}</div></header>`;
 }
 function footer(l){
-  const t=T[l];
-  return `<footer><div class="shell foot"><div>${logo(l,'footer')}<p>${esc(t.hero)}</p></div><div><a href="${p(l,'products/')}">${esc(t.nav[0])}</a>${PRODUCTS.map(product=>`<a href="${p(l,`products/${product.slug}/`)}">${esc(product.model)}</a>`).join('')}<a href="${p(l,'support/')}">${esc(t.nav[2])}</a><a href="${p(l,'contact/')}">${l==='ar'?'اتصل بنا':'Contact'}</a></div><div><a href="${p(l,'privacy/')}">${esc(t.privacy)}</a><a href="${p(l,'legal/')}">${esc(t.legal)}</a><a href="${p(l,'professionals/')}">${esc(t.nav[5])}</a></div></div><div class="shell copy">© 2026 BADAWI FOUR · Casablanca, Morocco</div></footer>`;
+  const t=T[l],h=HOME[l];
+  const contact=l==='ar'?'اتصل بنا':'Contact';
+  const languageLabel=l==='ar'?'اللغة':l==='en'?'Language':'Langue';
+  return `<footer><div class="shell foot"><div class="foot-brand">${logo(l,'footer')}<p>${esc(t.hero)}</p><p class="foot-retailer">${esc(h.footerRetailer)}</p></div><nav class="foot-links" aria-label="${esc(h.footerExplore)}"><h2>${esc(h.footerExplore)}</h2><a href="${p(l,'products/')}">${esc(t.nav[0])}</a>${PRODUCTS.map(product=>`<a href="${p(l,`products/${product.slug}/`)}">${esc(product.model)}</a>`).join('')}<a href="${p(l,'inspiration/')}">${esc(t.nav[1])}</a><a href="${p(l,'about/')}">${esc(t.nav[3])}</a><a href="${p(l,'professionals/')}">${esc(t.nav[5])}</a></nav><nav class="foot-links" aria-label="${esc(h.footerHelp)}"><h2>${esc(h.footerHelp)}</h2><a href="${p(l,'where-to-buy/')}">${esc(t.nav[4])}</a><a href="${p(l,'support/')}">${esc(t.nav[2])}</a><a href="${p(l,'support/register/')}">${esc(h.supportCards[0][0])}</a><a href="${p(l,'contact/')}">${esc(contact)}</a></nav><nav class="foot-links" aria-label="${esc(h.footerCompany)}"><h2>${esc(h.footerCompany)}</h2><a href="${p(l,'privacy/')}">${esc(t.privacy)}</a><a href="${p(l,'legal/')}">${esc(t.legal)}</a><p class="foot-language">${esc(languageLabel)}</p>${langs(l,'')}</nav></div><div class="shell copy"><span>© 2026 BADAWI FOUR · Casablanca, Morocco</span><span>${esc(h.footerRetailer)}</span></div></footer>`;
 }
 function head(l,title,desc,path,image=PRODUCT[0],schema='',imageAlt='BADAWI BF65INOXP'){
   const url=absolute(l,path),t=T[l];
@@ -83,7 +96,7 @@ function head(l,title,desc,path,image=PRODUCT[0],schema='',imageAlt='BADAWI BF65
 function imagePreload(path){
   const productSlug=/^products\/([^/]+)\/$/.exec(path)?.[1];
   const product=productSlug?PRODUCTS.find(item=>item.slug===productSlug):null;
-  const media=path===''?FOOD[2]:product?.media.product[0]||(path==='about/'?FOOD[0]:null);
+  const media=path===''?homeMedia('hero-kitchen'):product?.media.product[0]||(path==='about/'?FOOD[0]:null);
   if(!media)return '';
   const src=typeof media==='string'?media:media.src;
   const srcset=typeof media==='string'?'':(media.srcset||[]).map(([w,u])=>`${u} ${w}w`).join(', ');
@@ -106,9 +119,37 @@ const productCard=(l,product)=>{
   const discover=l==='ar'?'اكتشف المنتج':l==='en'?'Discover product':'Découvrir le produit';
   return `<article class="catalog-card"><a href="${p(l,`products/${product.slug}/`)}" data-track="product_discovery" data-product="${esc(product.model)}">${responsive(product.media.product[0],copy.name,'',false,'(max-width:620px) 100vw, 50vw')}</a><div><span class="eyebrow">BADAWI</span><h2>${esc(product.model)}</h2><p>${esc(copy.short)}</p><div class="chips"><span>${esc(product.widthLabel)}</span><span>${esc(product.finish)}</span></div>${trackedBtn(p(l,`products/${product.slug}/`),discover,'product_discovery',product.model,'dark',`data-product="${esc(product.model)}"`)}</div></article>`;
 };
+const homeProductCard=(l,product)=>{
+  const copy=productCopy(l,product),h=HOME[l],facts=product.verifiedFacts;
+  const pathLabel=product.category==='gas-oven'?h.paths.oven:h.paths.cooker;
+  const configuration=facts.doors?.[l]||facts.burners?.[l]||h.notPublished;
+  return `<article class="catalog-card home-product-card" data-product-card="${esc(product.slug)}"><a href="${p(l,`products/${product.slug}/`)}" data-track="product_discovery" data-destination="${esc(product.model)}" data-product="${esc(product.model)}">${responsive(product.media.product[0],copy.name,'',false,'(max-width:620px) 100vw, 50vw')}</a><div><span class="home-product-path">${esc(pathLabel)}</span><span class="eyebrow">BADAWI</span><h2>${esc(product.model)}</h2><p>${esc(copy.short)}</p><dl class="home-product-facts"><div><dt>${esc(h.compareLabels.type)}</dt><dd>${esc(localized(l,facts.type))}</dd></div><div><dt>${esc(h.compareLabels.dimensions)}</dt><dd>${esc(localized(l,facts.dimensions))}</dd></div><div><dt>${esc(h.compareLabels.finish)}</dt><dd>${esc(localized(l,facts.finish))}</dd></div><div><dt>${esc(h.compareLabels.configuration)}</dt><dd>${esc(configuration)}</dd></div></dl><div class="home-product-live" data-retailer-live data-product-slug="${esc(product.slug)}"><div><small>${esc(h.priceLabel)}</small><b data-price>${esc(h.retailerFallback)}</b></div><div><small>${esc(h.availabilityLabel)}</small><b data-stock>${esc(h.retailerFallback)}</b></div></div><div class="home-product-actions">${trackedBtn(p(l,`products/${product.slug}/`),h.productAction,'product_discovery',product.model,'dark',`data-product="${esc(product.model)}"`)}${whatsappBtn(l,'product','whatsapp product-card-whatsapp',`data-product="${esc(product.model)}" rel="noopener" data-placement="product-card"`,product)}</div></div></article>`;
+};
+const comparisonCard=(l,product)=>{
+  const h=HOME[l],facts=product.verifiedFacts;
+  const values={
+    type:localized(l,facts.type),
+    dimensions:localized(l,facts.dimensions),
+    finish:localized(l,facts.finish),
+    configuration:facts.doors?.[l]||facts.burners?.[l]||h.notPublished,
+    weight:facts.weight?.[l]||h.notPublished
+  };
+  return `<article class="comparison-card" aria-labelledby="compare-${esc(product.slug)}"><h3 id="compare-${esc(product.slug)}">${esc(product.model)}</h3><dl>${Object.entries(values).map(([key,value])=>`<div${value===h.notPublished?' class="is-unknown"':''}><dt>${esc(h.compareLabels[key])}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl><a class="inline-link" href="${p(l,`products/${product.slug}/`)}" data-track="product_discovery" data-destination="${esc(product.model)}" data-product="${esc(product.model)}">${esc(h.productAction)}</a></article>`;
+};
+const verifiedDetailTiles=(l)=>{
+  const oven=PRODUCTS.find(product=>product.slug==='bf65inoxp');
+  const cooker=PRODUCTS.find(product=>product.slug==='bf65cinox');
+  const items=[
+    {models:'BF65INOXP · BF65CINOX',value:`${localized(l,oven.verifiedFacts.finish)} · ${localized(l,cooker.verifiedFacts.finish)}`},
+    {models:'BF65INOXP',value:localized(l,oven.verifiedFacts.doors)},
+    {models:'BF65INOXP',value:localized(l,oven.verifiedFacts.controls)},
+    {models:'BF65CINOX',value:localized(l,cooker.verifiedFacts.burners)}
+  ];
+  return items.map((item,index)=>`<article class="verified-detail"><span class="verified-detail-index">0${index+1}</span><p>${esc(item.models)}</p><h3>${esc(item.value)}</h3></article>`).join('');
+};
 const trackedBtn=(u,t,event,destination,k='primary',extra='')=>btn(u,t,k,`data-track="${event}" data-destination="${esc(destination)}" ${extra}`);
 function trustStrip(l){
-  return `<div class="trust-strip"><div class="shell">${T[l].trust.map(item=>`<span>${esc(item)}</span>`).join('')}</div></div>`;
+  return `<div class="trust-strip home-trust" aria-label="${esc(l==='ar'?'معلومات الشراء':l==='en'?'Purchase information':'Informations d’achat')}"><div class="shell">${HOME[l].trust.map(item=>`<span>${esc(item)}</span>`).join('')}</div></div>`;
 }
 function guideCard(l,guide){
   return `<article class="guide-card"><span class="eyebrow">${l==='ar'?'دليل':l==='en'?'GUIDE':'GUIDE'}</span><h3>${esc(guide.title[l])}</h3><p>${esc(guide.description[l])}</p>${trackedBtn(p(l,`support/guides/${guide.slug}/`),T[l].readGuide,'guide_opened',guide.slug,'text',`data-guide="${esc(guide.slug)}"`)}</article>`;
@@ -122,19 +163,41 @@ function breadcrumb(l,items){
 }
 
 function home(l){
-  const t=T[l];
+  const t=T[l],h=HOME[l];
   const organization={
-    '@context':'https://schema.org','@type':'Organization',name:'BADAWI FOUR',url:ORIGIN,
+    '@type':'Organization',name:'BADAWI FOUR',url:ORIGIN,
     logo:`${ORIGIN}/brand/v1/badawi-four-logo.svg`,contactPoint:{'@type':'ContactPoint',telephone:WHATSAPP.display,contactType:'customer support'}
   };
-  return page(l,`BADAWI — ${t.hero}`,t.intro,'',
-    `<section class="hero"><div class="hero-bg">${responsive(FOOD[2],t.hero,'',true)}</div><div class="shade"></div><div class="shell hero-copy">${eyebrow('BADAWI')}<h1>${esc(t.hero)}</h1><p>${esc(t.intro)}</p><div class="actions">${trackedBtn(p(l,'products/bf65inoxp/'),t.discover,'product_discovery','BF65INOXP','primary','data-product="BF65INOXP"')}${trackedBtn(p(l,'where-to-buy/'),t.buy,'where_to_buy_opened','where-to-buy','ghost')}${whatsappBtn(l,'product','whatsapp','data-product="BF65INOXP" rel="noopener"')}</div></div></section>
+  const schema={'@context':'https://schema.org','@graph':[
+    organization,
+    {'@type':'WebSite',name:'BADAWI FOUR',url:ORIGIN,inLanguage:LANGS},
+    {'@type':'ItemList',name:h.chooserTitle,itemListElement:PRODUCTS.map((product,index)=>({'@type':'ListItem',position:index+1,name:`BADAWI ${product.model}`,url:absolute(l,`products/${product.slug}/`)}))},
+    {'@type':'FAQPage',mainEntity:h.faq.map(([question,answer])=>({'@type':'Question',name:question,acceptedAnswer:{'@type':'Answer',text:answer}}))}
+  ]};
+  const heroProducts=PRODUCTS.map((product,index)=>{
+    const copy=productCopy(l,product);
+    return `<a class="home-hero-product home-hero-product-${index+1}" href="${p(l,`products/${product.slug}/`)}" data-track="product_discovery" data-destination="${esc(product.model)}" data-product="${esc(product.model)}">${responsive(product.media.product[0],copy.name,'',true,'(max-width:620px) 48vw, 28vw')}<span><b>${esc(product.model)}</b><small>${esc(localized(l,product.verifiedFacts.type))}</small></span></a>`;
+  }).join('');
+  return page(l,h.metaTitle,h.metaDescription,'',
+    `<div class="home-page"><section class="home-hero"><div class="home-hero-bg">${responsive(homeMedia('hero-kitchen'),'','',true,'100vw')}</div><div class="home-hero-shade"></div><div class="shell home-hero-layout"><div class="home-hero-copy">${eyebrow(h.heroKicker)}<h1>${esc(t.hero)}</h1><p>${esc(h.heroLead)}</p><div class="actions">${trackedBtn(p(l,'products/'),h.heroCatalog,'product_discovery','catalog','primary')}${whatsappBtn(l,'general','whatsapp home-hero-whatsapp','rel="noopener" data-placement="hero"')}</div><ul class="home-hero-signals">${h.heroSignals.map(item=>`<li>${esc(item)}</li>`).join('')}</ul></div><div class="home-hero-products" aria-label="${esc(t.catalogTitle)}">${heroProducts}</div></div></section>
     ${trustStrip(l)}
-    <section class="section"><div class="shell"><div class="section-head"><div>${eyebrow(t.flag)}<h2>${esc(t.catalogTitle)}</h2></div></div><div class="catalog-grid home-products">${PRODUCTS.map(product=>productCard(l,product)).join('')}</div></div></section>
-    <section class="section dark"><div class="shell">${eyebrow(l==='ar'?'على المائدة':l==='en'?'AT THE TABLE':'À TABLE')}<h2>${esc(t.emotion)}</h2><p class="lede light">${esc(t.emotionText)}</p><div class="food">${FOOD.map((src,i)=>img(src,[l==='ar'?'طبق مشوي':'Roast dish',l==='ar'?'من الفرن إلى المائدة':'From oven to table',l==='ar'?'مائدة مشتركة':'Shared table'][i])).join('')}</div></div></section>
-    <section class="section warm"><div class="shell split"><div>${eyebrow(l==='ar'?'بعد الشراء':l==='en'?'AFTER PURCHASE':'APRÈS L’ACHAT')}<h2>${esc(t.supportTitle)}</h2><p class="lede">${esc(t.supportText)}</p>${btn(p(l,'support/'),t.nav[2],'dark')}</div><div class="support-links"><a href="${p(l,'support/register/')}">01 <b>${esc(t.register)}</b></a><a href="${p(l,'support/request/')}">02 <b>${esc(t.request)}</b></a><a href="${p(l,'where-to-buy/')}">03 <b>${esc(t.buy)}</b></a></div></div></section>
-    ${guidesSection(l,false)}`,
-    '',JSON.stringify(organization)
+    <section class="section home-chooser"><div class="shell"><div class="section-head"><div>${eyebrow(h.chooserKicker)}<h2>${esc(h.chooserTitle)}</h2><p class="lede">${esc(h.chooserLead)}</p></div></div><div class="catalog-grid home-products">${PRODUCTS.map(product=>homeProductCard(l,product)).join('')}</div></div></section>
+    <section class="section home-comparison"><div class="shell"><div class="section-head"><div>${eyebrow(h.compareKicker)}<h2>${esc(h.compareTitle)}</h2><p class="lede">${esc(h.compareLead)}</p></div></div><div class="comparison-grid">${PRODUCTS.map(product=>comparisonCard(l,product)).join('')}</div></div></section>
+    <section class="section home-story"><div class="shell home-story-grid"><figure>${responsive(homeMedia('shared-table'),h.storyTitle,'',false,'(max-width:900px) 100vw, 56vw')}<figcaption>${esc(h.storyNote)}</figcaption></figure><div class="home-story-copy">${eyebrow(h.storyKicker)}<h2>${esc(h.storyTitle)}</h2><p class="lede">${esc(h.storyText)}</p><span class="home-story-rule" aria-hidden="true"></span></div></div></section>
+    <section class="section home-details"><div class="shell"><div class="section-head"><div>${eyebrow(h.detailsKicker)}<h2>${esc(h.detailsTitle)}</h2><p class="lede">${esc(h.detailsLead)}</p></div></div><div class="verified-detail-grid">${verifiedDetailTiles(l)}</div></div></section>
+    <section class="section home-video"><div class="shell home-video-grid"><div>${eyebrow(h.videoKicker)}<h2>${esc(h.videoTitle)}</h2><p class="lede">${esc(h.videoText)}</p>${trackedBtn(p(l,'products/bf65inoxp/'),h.productAction,'product_discovery','BF65INOXP','text','data-product="BF65INOXP"')}</div><video data-home-video data-track-video controls playsinline preload="none" poster="${FOOD[2]}"><source data-src="${VIDEO}" type="video/mp4"><p>${esc(h.videoFallback)} <a href="${p(l,'products/bf65inoxp/')}">${esc(h.productAction)}</a></p></video></div></section>
+    <section class="section home-inspiration"><div class="shell"><div class="section-head"><div>${eyebrow(h.inspirationKicker)}<h2>${esc(h.inspirationTitle)}</h2><p class="lede">${esc(h.inspirationText)}</p></div>${trackedBtn(p(l,'inspiration/'),h.inspirationAction,'guide_opened','inspiration','text')}</div><div class="inspiration-mosaic"><figure>${img(FOOD[0],h.inspirationCaptions[0])}<figcaption>${esc(h.inspirationCaptions[0])}</figcaption></figure><figure>${img(FOOD[1],h.inspirationCaptions[1])}<figcaption>${esc(h.inspirationCaptions[1])}</figcaption></figure><figure>${responsive(homeMedia('prep-detail'),h.inspirationCaptions[2],'',false,'(max-width:620px) 100vw, 42vw')}<figcaption>${esc(h.inspirationCaptions[2])}</figcaption></figure><figure>${img(FOOD[2],h.inspirationCaptions[3])}<figcaption>${esc(h.inspirationCaptions[3])}</figcaption></figure></div></div></section>
+    <section class="section home-journey"><div class="shell"><div class="section-head"><div>${eyebrow(h.journeyKicker)}<h2>${esc(h.journeyTitle)}</h2></div></div><ol>${h.journeySteps.map(([number,title,text])=>`<li><span>${esc(number)}</span><div><h3>${esc(title)}</h3><p>${esc(text)}</p></div></li>`).join('')}</ol></div></section>
+    <section class="section home-conversion" data-home-final-offer><div class="shell home-conversion-grid"><div>${eyebrow(h.ctaKicker)}<h2>${esc(h.ctaTitle)}</h2><p class="lede">${esc(h.ctaText)}</p></div><div class="home-conversion-actions">${trackedBtn(p(l,'products/'),h.ctaProducts,'product_discovery','catalog','primary')}${trackedBtn(p(l,'where-to-buy/'),h.ctaRetailer,'where_to_buy_opened','where-to-buy','ghost')}${whatsappBtn(l,'general','whatsapp','rel="noopener" data-placement="final-offer"')}</div></div></section>
+    <section class="section home-support"><div class="shell"><div class="section-head"><div>${eyebrow(h.supportKicker)}<h2>${esc(h.supportTitle)}</h2><p class="lede">${esc(h.supportText)}</p></div>${btn(p(l,'support/'),t.nav[2],'dark')}</div><div class="home-support-grid">${[
+      ['support/register/',...h.supportCards[0]],
+      ['support/request/',...h.supportCards[1]],
+      ['support/guides/clean-inox-glass/',...h.supportCards[2]],
+      ['support/guides/before-installation/',...h.supportCards[3]]
+    ].map(([route,title,text],index)=>`<a href="${p(l,route)}"><span>0${index+1}</span><h3>${esc(title)}</h3><p>${esc(text)}</p><b aria-hidden="true">↗</b></a>`).join('')}</div></div></section>
+    <section class="section home-faq"><div class="shell home-faq-grid"><div>${eyebrow(h.faqKicker)}<h2>${esc(h.faqTitle)}</h2></div><div class="faq home-faq-list">${h.faq.map(([question,answer])=>`<details><summary>${esc(question)}</summary><p>${esc(answer)}</p></details>`).join('')}</div></div></section>
+    <div class="home-sticky-cta" data-home-sticky hidden><span>BADAWI FOUR</span><a href="${wa(l,'general')}" data-track="whatsapp_click" data-destination="Digitronics WhatsApp" data-placement="sticky" rel="noopener">${whatsappIcon()}<b>${esc(h.stickyLabel)}</b></a></div></div>`,
+    '',JSON.stringify(schema),homeMedia('hero-kitchen').src,h.heroImageAlt
   );
 }
 
@@ -446,6 +509,20 @@ async function buildBf65cinoxAssets(){
   }
 }
 
+async function buildHomeAssets(){
+  for(const asset of HOME_ASSETS){
+    const source=await readFile(join(HOME_SOURCE,asset.source));
+    const digest=createHash('sha256').update(source).digest('hex').toUpperCase();
+    if(digest!==asset.sha256) throw new Error(`${asset.source} checksum mismatch: ${digest}`);
+    const metadata=await sharp(source).metadata();
+    if(metadata.width!==asset.width||metadata.height!==asset.height) throw new Error(`${asset.source} dimensions changed: ${metadata.width}x${metadata.height}`);
+    for(const width of asset.widths){
+      const image=await sharp(source).resize({width,withoutEnlargement:true}).webp({quality:82,effort:6}).toBuffer();
+      await write(`home/v1/${asset.name}-${width}.webp`,image);
+    }
+  }
+}
+
 await rm(OUT,{recursive:true,force:true});
 await mkdir(OUT,{recursive:true});
 await write(`assets/${CSS_FILE}`,CSS);
@@ -454,6 +531,7 @@ await write(`assets/${JS_FILE}`,JS);
 await write('assets/site.css',CSS);
 await write('assets/site.js',JS);
 await buildBf65cinoxAssets();
+await buildHomeAssets();
 for(const file of BRAND_FILES){
   const target=join(OUT,'brand','v1',file);
   await mkdir(dirname(target),{recursive:true});
@@ -533,6 +611,9 @@ await write('_headers',`/*
   Cache-Control: public, max-age=31536000, immutable
 
 /brand/v1/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/home/v1/*
   Cache-Control: public, max-age=31536000, immutable
 
 /products/v1/*

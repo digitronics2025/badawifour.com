@@ -1,5 +1,7 @@
 const remoteProductImage = (model, id) => ({
   src: `https://digitronics.ma/r2/products/${model}/${id}.webp.w1080.webp`,
+  width: 1080,
+  height: 1080,
   srcset: [
     [256, `https://digitronics.ma/r2/products/${model}/${id}.webp.w256.webp`],
     [384, `https://digitronics.ma/r2/products/${model}/${id}.webp.w384.webp`],
@@ -11,6 +13,8 @@ const remoteProductImage = (model, id) => ({
 
 const localProductImage = (slug) => ({
   src: `/products/v1/${slug}/${slug}-1122.webp`,
+  width: 1122,
+  height: 1402,
   srcset: [320,640,960,1122].map((width)=>[width,`/products/v1/${slug}/${slug}-${width}.webp`])
 });
 

@@ -167,34 +167,34 @@ Verified catalog data remains the sole source of technical product claims.
 
 ## Steps
 
-- [ ] 1. Generate and version three truthful decorative homepage assets — done when: source masters and responsive WebP variants exist locally without appliances, logos, labels, packaging, or words — check: `npm run build && node --test tests/homepage-experience.test.mjs`
-- [ ] 2. Add complete FR/AR/EN homepage presentation content — done when: every new homepage section and fallback label has localized source content — check: `node --test tests/homepage-experience.test.mjs`
-- [ ] 3. Build the immersive hero and trust strip — done when: the server-rendered hero presents both products, one catalog CTA, one general Digitronics WhatsApp CTA, and three trust signals — check: `node --test tests/homepage-experience.test.mjs`
-- [ ] 4. Build guided product cards with live retailer states — done when: both models show approved facts, model-specific actions, and usable loading/error fallbacks — check: `node --test tests/homepage-experience.test.mjs`
-- [ ] 5. Add an accessible verified product comparison — done when: both products and explicit unknown values render semantically in every locale — check: `node --test tests/homepage-experience.test.mjs`
-- [ ] 6. Add the editorial BADAWI FOUR story — done when: localized safe brand copy and the generated shared-table image render without unverified performance claims — check: `node --test tests/homepage-experience.test.mjs`
-- [ ] 7. Add model-labelled verified design details — done when: every detail names the applicable model and is sourced from verified catalog data — check: `node --test tests/homepage-experience.test.mjs`
-- [ ] 8. Add the official product video with deferred behavior — done when: the video has a stable poster, controls, no autoplay, deferred source loading, fallback copy, and existing analytics — check: `node --test tests/homepage-experience.test.mjs`
-- [ ] 9. Add the editorial cooking-inspiration mosaic — done when: approved and generated media have localized captions, stable geometry, and an Inspiration link — check: `node --test tests/homepage-experience.test.mjs`
-- [ ] 10. Add the three-step buying journey — done when: the page explains selection, Digitronics confirmation, and BADAWI support without unsupported fulfillment promises — check: `node --test tests/homepage-experience.test.mjs`
-- [ ] 11. Add the final conversion banner and mobile sticky action — done when: catalog, retailer, and general WhatsApp actions work, and the sticky action appears only after the hero without covering content — check: `node --test tests/homepage-experience.test.mjs`
-- [ ] 12. Consolidate support and care routes — done when: registration, support, cleaning, and installation guidance are directly linked in all locales — check: `node --test tests/homepage-experience.test.mjs`
-- [ ] 13. Add the localized buying FAQ — done when: visible accessible disclosures and matching FAQPage structured data cover the approved questions — check: `node --test tests/homepage-experience.test.mjs`
-- [ ] 14. Enrich the footer — done when: product, buying, support, language, legal, and retailer context are clear without changing the official logo — check: `node --test tests/homepage-experience.test.mjs`
-- [ ] 15. Apply the premium responsive visual and motion system — done when: page-scoped styles support desktop, tablet, mobile, RTL, keyboard focus, reduced motion, stable media, and no overflow — check: `manual: verify localized desktop, tablet, mobile, RTL, keyboard, reduced-motion, and no-JavaScript states`
-- [ ] 16. Complete homepage SEO, social, analytics, and public interfaces — done when: localized metadata, local social media, Organization/WebSite/ItemList/FAQ JSON-LD, tracked CTAs, and `/home/v1/` caching are consistent — check: `node --test tests/homepage-experience.test.mjs`
-- [ ] 17. Enforce claim safety and architecture boundaries — done when: unsupported claims and warranty language are absent while Worker secrets, D1, R2, forms, migrations, and APIs remain unchanged — check: `npm run check && git diff -- src/worker.mjs migrations wrangler.toml`
+- [x] 1. Generate and version three truthful decorative homepage assets — done when: source masters and responsive WebP variants exist locally without appliances, logos, labels, packaging, or words — check: `npm run build && node --test tests/homepage-experience.test.mjs`
+- [x] 2. Add complete FR/AR/EN homepage presentation content — done when: every new homepage section and fallback label has localized source content — check: `node --test tests/homepage-experience.test.mjs`
+- [x] 3. Build the immersive hero and trust strip — done when: the server-rendered hero presents both products, one catalog CTA, one general Digitronics WhatsApp CTA, and three trust signals — check: `node --test tests/homepage-experience.test.mjs`
+- [x] 4. Build guided product cards with live retailer states — done when: both models show approved facts, model-specific actions, and usable loading/error fallbacks — check: `node --test tests/homepage-experience.test.mjs`
+- [x] 5. Add an accessible verified product comparison — done when: both products and explicit unknown values render semantically in every locale — check: `node --test tests/homepage-experience.test.mjs`
+- [x] 6. Add the editorial BADAWI FOUR story — done when: localized safe brand copy and the generated shared-table image render without unverified performance claims — check: `node --test tests/homepage-experience.test.mjs`
+- [x] 7. Add model-labelled verified design details — done when: every detail names the applicable model and is sourced from verified catalog data — check: `node --test tests/homepage-experience.test.mjs`
+- [x] 8. Add the official product video with deferred behavior — done when: the video has a stable poster, controls, no autoplay, deferred source loading, fallback copy, and existing analytics — check: `node --test tests/homepage-experience.test.mjs`
+- [x] 9. Add the editorial cooking-inspiration mosaic — done when: approved and generated media have localized captions, stable geometry, and an Inspiration link — check: `node --test tests/homepage-experience.test.mjs`
+- [x] 10. Add the three-step buying journey — done when: the page explains selection, Digitronics confirmation, and BADAWI support without unsupported fulfillment promises — check: `node --test tests/homepage-experience.test.mjs`
+- [x] 11. Add the final conversion banner and mobile sticky action — done when: catalog, retailer, and general WhatsApp actions work, and the sticky action appears only after the hero without covering content — check: `node --test tests/homepage-experience.test.mjs`
+- [x] 12. Consolidate support and care routes — done when: registration, support, cleaning, and installation guidance are directly linked in all locales — check: `node --test tests/homepage-experience.test.mjs`
+- [x] 13. Add the localized buying FAQ — done when: visible accessible disclosures and matching FAQPage structured data cover the approved questions — check: `node --test tests/homepage-experience.test.mjs`
+- [x] 14. Enrich the footer — done when: product, buying, support, language, legal, and retailer context are clear without changing the official logo — check: `node --test tests/homepage-experience.test.mjs`
+- [x] 15. Apply the premium responsive visual and motion system — done when: page-scoped styles support desktop, tablet, mobile, RTL, keyboard focus, reduced motion, stable media, and no overflow — check: `manual: verified FR/EN/AR at 1440/1024/768/390/320, RTL, keyboard order, menu, FAQ, sticky CTA, reduced motion, no-JavaScript navigation, and zero overflow`
+- [x] 16. Complete homepage SEO, social, analytics, and public interfaces — done when: localized metadata, local social media, Organization/WebSite/ItemList/FAQ JSON-LD, tracked CTAs, and `/home/v1/` caching are consistent — check: `node --test tests/homepage-experience.test.mjs`
+- [x] 17. Enforce claim safety and architecture boundaries — done when: unsupported claims and warranty language are absent while Worker secrets, D1, R2, forms, migrations, and APIs remain unchanged — check: `npm run check && git diff -- src/worker.mjs migrations wrangler.toml`
 - [ ] 18. Run the full responsive, accessibility, failure-state, performance, CI, deployment, and live verification matrix — done when: all named checks pass on the exact deployed revision — check: `npm run check && npm run audit:prod`
 
 ## Tail
 
-- [ ] T1. Adversarial review of the whole diff — done when: every finding is fixed or written to the Ledger with a reason — check: `git diff --stat` reviewed hunk by hunk
-- [ ] T2. Similar-issue sweep — done when: sibling pages, endpoints, helpers and translations were searched for the same pattern — check: `manual: list what was searched and what was found`
-- [ ] T3. Lint and tests green — done when: the complete repository gate exits 0 — check: `npm run check`
-- [ ] T4. Docs synced per the repo's rules — done when: the persisted plan and implementation record reflect the completed change — check: `git diff --stat docs/`
+- [x] T1. Adversarial review of the whole diff — done when: every finding is fixed or written to the Ledger with a reason — check: `git diff --stat` reviewed hunk by hunk
+- [x] T2. Similar-issue sweep — done when: sibling pages, endpoints, helpers and translations were searched for the same pattern — check: `manual: reviewed localized footer routes, responsive images, homepage claims, analytics, and structured-data patterns; no unresolved sibling defect found`
+- [x] T3. Lint and tests green — done when: the complete repository gate exits 0 — check: `npm run check` (49/49 tests passed)
+- [x] T4. Docs synced per the repo's rules — done when: the persisted plan and implementation record reflect the completed change — check: `git diff --stat docs/`
 - [ ] T5. Committed path-scoped and pushed — done when: `git status` shows none of this work uncommitted and the push succeeds — check: `git log origin/main..HEAD --oneline`
 - [ ] T6. Confirmed live where the push deploys — done when: the changed homepage, assets, CTAs, structured data, and deployment are observed on production — check: `manual: verify https://badawifour.com/fr/, /ar/, and /en/ plus GitHub Actions and Cloudflare version`
-- [ ] T7. A claim registered for this change — done when: this plan records a downstream production probe and deadline — check: `manual: verify the Claim section names the production homepage probe and deadline`
+- [x] T7. A claim registered for this change — done when: this plan records a downstream production probe and deadline — check: `manual: verified the production homepage probe and 2026-09-19 deadline below`
 
 ## Claim
 
@@ -205,3 +205,5 @@ Verified catalog data remains the sole source of technical product claims.
 ## Ledger
 
 - 2026-09-19 19:00 — created from conversation 2026-09-19
+- 2026-09-19 — browser review found and fixed an incorrect footer registration route and a no-JavaScript mobile navigation layout shift.
+- 2026-09-19 — local verification passed at 1440, 1024, 768, 390, and 320 px; retailer failure and slow-network fallbacks remained usable; Lighthouse passed 95/100/100/100 with CLS 0.
