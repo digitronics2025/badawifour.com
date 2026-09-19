@@ -4,6 +4,7 @@ import { readFile, access } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import worker, { extractProduct, validateEmail, validatePhone } from '../src/worker.mjs';
 import { GUIDES } from '../src/content.mjs';
+import { RETAILER } from '../src/catalog.mjs';
 
 const root = fileURLToPath(new URL('../dist/', import.meta.url));
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
@@ -45,6 +46,20 @@ test('product page has canonical, same-path hreflang and parseable JSON-LD', asy
   assert.ok(Array.isArray(data));
   assert.equal(data[0]['@type'],'Product');
   assert.equal(data[0].model,'BF65INOXP');
+});
+
+test('every WhatsApp button targets the verified Digitronics number', async () => {
+  assert.equal(RETAILER.whatsapp.url,`https://wa.me/${RETAILER.whatsapp.number}`);
+  for (const language of languages) {
+    for (const route of routes) {
+      const path = root + language + '/' + route + 'index.html';
+      const html = await readFile(path,'utf8');
+      const links = [...html.matchAll(/href="(https:\/\/wa\.me\/[^"?]+)[^"]*"/g)].map((match)=>match[1]);
+      assert.ok(links.length > 0,`${path} should include a WhatsApp link`);
+      for (const link of links) assert.equal(link,RETAILER.whatsapp.url,path);
+      assert.doesNotMatch(html,/data-track="whatsapp_click" data-destination="whatsapp"/);
+    }
+  }
 });
 
 test('removed service-coverage claims stay absent from source and generated pages', async () => {

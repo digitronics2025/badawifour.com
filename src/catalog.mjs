@@ -12,8 +12,11 @@ const productImage = (id) => ({
 export const RETAILER = {
   name: 'Digitronics',
   productUrl: 'https://digitronics.ma/fr/produit/badawi-four-bf65inoxp-cuisinere-a-gaz-4-feux',
-  phone: '212664999733',
-  phoneDisplay: '+212 664 999 733',
+  whatsapp: {
+    number: '212664999733',
+    display: '+212 664 999 733',
+    url: 'https://wa.me/212664999733'
+  },
   address: '30 Rue 9, Lots Smara, Bd Oued Daoura, Lot Haj Fateh, Oulfa, Casablanca',
   mapUrl: 'https://maps.google.com/?cid=ChIJWWqhxYotpg0RJQdUsvwxXBM'
 };

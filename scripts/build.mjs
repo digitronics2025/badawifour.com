@@ -12,7 +12,7 @@ const BRAND_SOURCE=fileURLToPath(new URL('../src/brand/v1/',import.meta.url));
 const ORIGIN='https://badawifour.com';
 const PRODUCT_DATA=PRODUCTS[0];
 const RETAILER=RETAILER_INFO.productUrl;
-const PHONE=RETAILER_INFO.phone;
+const WHATSAPP=RETAILER_INFO.whatsapp;
 const PRODUCT=PRODUCT_DATA.media.product.map(media=>media.src);
 const FOOD=PRODUCT_DATA.media.food;
 const VIDEO=PRODUCT_DATA.media.video;
@@ -40,7 +40,7 @@ const wa=(l,context='product')=>{
     en:context==='general'?'Hello, I would like more information about BADAWI.':'Hello, I would like more information about BADAWI BF65INOXP.',
     ar:context==='general'?'مرحبا، أريد معلومات عن BADAWI.':'مرحبا، أريد معلومات عن BADAWI BF65INOXP.'
   };
-  return `https://wa.me/${PHONE}?text=${encodeURIComponent(messages[l]+'\n'+absolute(l,context==='product'?'products/bf65inoxp/':''))}`;
+  return `${WHATSAPP.url}?text=${encodeURIComponent(messages[l]+'\n'+absolute(l,context==='product'?'products/bf65inoxp/':''))}`;
 };
 const btn=(u,t,k='primary',a='')=>`<a class="btn ${k}" href="${u}" ${a}>${esc(t)}<span aria-hidden="true">↗</span></a>`;
 const eyebrow=s=>`<p class="eyebrow">${esc(s)}</p>`;
@@ -75,7 +75,7 @@ function imagePreload(path){
   const sizes=path==='products/bf65inoxp/'?'(max-width:900px) 100vw, 58vw':'100vw';
   return `<link rel="preload" as="image" href="${src}"${srcset?` imagesrcset="${srcset}" imagesizes="${sizes}"`:''} fetchpriority="high" referrerpolicy="no-referrer">`;
 }
-const page=(l,title,desc,path,body,current='',schema='')=>`<!doctype html><html lang="${l}" dir="${T[l].dir}"><head>${head(l,title,desc,path,PRODUCT[0],schema)}${imagePreload(path)}</head><body>${header(l,current,path)}<main id="main">${body}</main>${footer(l)}<a class="float" data-track="whatsapp_click" data-destination="whatsapp" aria-label="${esc('WA — '+T[l].whatsapp)}" href="${wa(l,'general')}" rel="noopener">WA</a></body></html>`;
+const page=(l,title,desc,path,body,current='',schema='')=>`<!doctype html><html lang="${l}" dir="${T[l].dir}"><head>${head(l,title,desc,path,PRODUCT[0],schema)}${imagePreload(path)}</head><body>${header(l,current,path)}<main id="main">${body}</main>${footer(l)}<a class="float" data-track="whatsapp_click" data-destination="Digitronics WhatsApp" aria-label="${esc('WA — '+T[l].whatsapp)}" href="${wa(l,'general')}" rel="noopener">WA</a></body></html>`;
 
 
 const localized=(l,values)=>values[l]||values.en||values.fr;
@@ -98,7 +98,7 @@ function home(l){
   const t=T[l];
   const organization={
     '@context':'https://schema.org','@type':'Organization',name:'BADAWI FOUR',url:ORIGIN,
-    logo:`${ORIGIN}/brand/v1/badawi-four-logo.svg`,contactPoint:{'@type':'ContactPoint',telephone:RETAILER_INFO.phoneDisplay,contactType:'customer support'}
+    logo:`${ORIGIN}/brand/v1/badawi-four-logo.svg`,contactPoint:{'@type':'ContactPoint',telephone:WHATSAPP.display,contactType:'customer support'}
   };
   return page(l,`BADAWI — ${t.hero}`,t.intro,'',
     `<section class="hero"><div class="hero-bg">${responsive(FOOD[2],t.hero,'',true)}</div><div class="shade"></div><div class="shell hero-copy">${eyebrow('BADAWI')}<h1>${esc(t.hero)}</h1><p>${esc(t.intro)}</p><div class="actions">${trackedBtn(p(l,'products/bf65inoxp/'),t.discover,'product_discovery','BF65INOXP','primary','data-product="BF65INOXP"')}${trackedBtn(p(l,'where-to-buy/'),t.buy,'where_to_buy_opened','where-to-buy','ghost')}</div></div></section>
@@ -154,7 +154,7 @@ function product(l){
       ${media.map((item,i)=>`<button type="button" data-thumb="${i}" aria-label="${esc((l==='ar'?'عرض صورة':l==='en'?'Show image':'Afficher l’image')+' '+(i+1))}">${responsive(item,`BF65INOXP ${i+1}`,'',false,'90px')}</button>`).join('')}</div>
       <div class="product-info">${breadcrumb(l,[{label:'BADAWI',url:p(l)},{label:t.nav[0],url:p(l,'products/')},{label:'BF65INOXP'}])}${eyebrow('BADAWI · BF65INOXP')}<h1>BF65INOXP</h1><h2>${esc(t.hero)}</h2><p>${esc(t.productLead)}</p>
       <div class="live live-card" data-retailer-live><div><small>${esc(t.price)}</small><b data-price>—</b><span class="currency-hint">${esc(t.currencyHint)}</span></div><div><small>${esc(t.stock)}</small><b data-stock>—</b></div></div>
-      <div class="actions vertical">${trackedBtn(RETAILER,t.retailer,'digitronics_click','Digitronics','primary','data-product="BF65INOXP" rel="noopener"')}${trackedBtn(wa(l,'product'),t.whatsapp,'whatsapp_click','whatsapp','dark','data-product="BF65INOXP" rel="noopener"')}</div></div>
+      <div class="actions vertical">${trackedBtn(RETAILER,t.retailer,'digitronics_click','Digitronics','primary','data-product="BF65INOXP" rel="noopener"')}${trackedBtn(wa(l,'product'),t.whatsapp,'whatsapp_click','Digitronics WhatsApp','dark','data-product="BF65INOXP" rel="noopener"')}</div></div>
     </div></section>
     ${trustStrip(l)}
     <section class="section"><div class="shell">${eyebrow(t.verified)}<h2>${esc(t.details)}</h2><div class="details">
@@ -220,7 +220,7 @@ function where(l){
     `<section class="page-hero warm"><div class="shell">${eyebrow(t.buy)}<h1>${esc(t.where)}</h1><p>${esc(t.whereText)}</p></div></section>
     <section class="section"><div class="shell retailer retailer-rich">
       <div><span class="eyebrow">${l==='ar'?'نقطة البيع الحالية':l==='en'?'CURRENT RETAILER':'POINT DE VENTE ACTUEL'}</span><h2>${esc(RETAILER_INFO.name)}</h2><p>${esc(RETAILER_INFO.address)}</p><a class="inline-link" href="${RETAILER_INFO.mapUrl}" rel="noopener">${l==='ar'?'فتح الموقع على الخريطة':l==='en'?'Open location on map':'Ouvrir l’emplacement sur la carte'}</a><div class="retailer-trust">${t.trust.map(item=>`<span>✓ ${esc(item)}</span>`).join('')}</div></div>
-      <div><div class="live live-card" data-retailer-live><div><small>${esc(t.price)}</small><b data-price>—</b><span class="currency-hint">${esc(t.currencyHint)}</span></div><div><small>${esc(t.stock)}</small><b data-stock>—</b></div></div><div class="actions vertical">${trackedBtn(RETAILER,t.retailer,'digitronics_click','Digitronics','dark','data-product="BF65INOXP" rel="noopener"')}${trackedBtn(wa(l,'product'),t.whatsapp,'whatsapp_click','whatsapp','ghost','data-product="BF65INOXP" rel="noopener"')}</div></div>
+      <div><div class="live live-card" data-retailer-live><div><small>${esc(t.price)}</small><b data-price>—</b><span class="currency-hint">${esc(t.currencyHint)}</span></div><div><small>${esc(t.stock)}</small><b data-stock>—</b></div></div><div class="actions vertical">${trackedBtn(RETAILER,t.retailer,'digitronics_click','Digitronics','dark','data-product="BF65INOXP" rel="noopener"')}${trackedBtn(wa(l,'product'),t.whatsapp,'whatsapp_click','Digitronics WhatsApp','ghost','data-product="BF65INOXP" rel="noopener"')}</div></div>
     </div></section>`,4
   );
 }
@@ -240,7 +240,7 @@ function formPage(l,type,title,lead,fields,current=5){
   const path=type==='contact'?'contact/':type==='professionals'?'professionals/':`support/${type==='registration'?'register':'request'}/`;
   return page(l,`${title} — BADAWI`,lead,path,
     `<section class="page-hero warm"><div class="shell">${breadcrumb(l,[{label:'BADAWI',url:p(l)},...(type==='registration'||type==='support'?[{label:t.nav[2],url:p(l,'support/')}]:[]),{label:title}])}<h1>${esc(title)}</h1><p>${esc(lead)}</p></div></section>
-    <section class="section"><div class="shell form-layout"><form data-api-form="${type}" aria-describedby="required-note" data-success-prefix="${esc(t.formSuccess)}" data-error-message="${esc(t.formError)}" enctype="multipart/form-data"><input type="hidden" name="locale" value="${l}"><input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true"><input type="hidden" name="started_at" value=""><p id="required-note" class="required-note">${l==='ar'?'* حقل مطلوب':l==='en'?'* Required field':'* Champ obligatoire'}</p>${fields}<label class="consent"><input type="checkbox" name="privacy_consent" value="1" required aria-required="true"><span>${esc(t.labels.privacyConsent)}<span class="required-mark" aria-hidden="true"> *</span> <a class="inline-link" href="${p(l,'privacy/')}" target="_blank" rel="noopener">${esc(t.privacy)}</a></span></label><button class="btn dark" type="submit">${esc(t.send)} <span aria-hidden="true">↗</span></button><p data-form-status role="status" aria-live="polite"></p></form><aside><h2>WhatsApp</h2>${trackedBtn(wa(l,'general'),'WhatsApp','whatsapp_click','support-whatsapp','dark','rel="noopener"')}<p>${esc(RETAILER_INFO.phoneDisplay)}</p><p class="muted">${esc(t.supportText)}</p></aside></div></section>`,
+    <section class="section"><div class="shell form-layout"><form data-api-form="${type}" aria-describedby="required-note" data-success-prefix="${esc(t.formSuccess)}" data-error-message="${esc(t.formError)}" enctype="multipart/form-data"><input type="hidden" name="locale" value="${l}"><input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true"><input type="hidden" name="started_at" value=""><p id="required-note" class="required-note">${l==='ar'?'* حقل مطلوب':l==='en'?'* Required field':'* Champ obligatoire'}</p>${fields}<label class="consent"><input type="checkbox" name="privacy_consent" value="1" required aria-required="true"><span>${esc(t.labels.privacyConsent)}<span class="required-mark" aria-hidden="true"> *</span> <a class="inline-link" href="${p(l,'privacy/')}" target="_blank" rel="noopener">${esc(t.privacy)}</a></span></label><button class="btn dark" type="submit">${esc(t.send)} <span aria-hidden="true">↗</span></button><p data-form-status role="status" aria-live="polite"></p></form><aside><h2>WhatsApp</h2>${trackedBtn(wa(l,'general'),'WhatsApp','whatsapp_click','Digitronics WhatsApp','dark','rel="noopener"')}<p>${esc(WHATSAPP.display)}</p><p class="muted">${esc(t.supportText)}</p></aside></div></section>`,
     current
   );
 }
