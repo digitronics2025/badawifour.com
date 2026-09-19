@@ -225,3 +225,18 @@ jobs:
 
           curl --silent --show-error --head --max-time 20 https://badawifour.com/fr/ > /tmp/headers.txt
           grep -qi '^x-content-type-options: nosniff' /tmp/headers.txt
+
+          # Legacy/support aliases must redirect to their canonical pages.
+          curl --silent --show-error --head --max-time 20 https://badawifour.com/fr/support/assistance/ > /tmp/alias-support.txt
+          grep -qi '^location: https://badawifour.com/fr/support/request/' /tmp/alias-support.txt
+          curl --silent --show-error --head --max-time 20 https://badawifour.com/en/support/guides/cleaning/ > /tmp/alias-cleaning.txt
+          grep -qi '^location: https://badawifour.com/en/support/guides/clean-inox-glass/' /tmp/alias-cleaning.txt
+
+          # Exercise one real production form endpoint, then immediately remove
+          # the synthetic row so smoke tests never pollute business data.
+          started_at="$(node -p 'Date.now()-2500')"
+          curl --fail --silent --show-error --max-time 20             -H 'Origin: https://badawifour.com'             -H 'Referer: https://badawifour.com/en/contact/'             -H 'Accept: application/json'             -F 'locale=en'             -F 'website='             -F "started_at=$started_at"             -F 'name=BADAWI Deployment Smoke Test'             -F 'email=smoke@badawifour.invalid'             -F 'subject=Production form smoke test'             -F 'message=Automated production verification. Safe to delete.'             -F 'privacy_consent=1'             https://badawifour.com/api/contact > /tmp/contact-smoke.json
+
+          smoke_ref="$(node -e "const x=require('/tmp/contact-smoke.json'); if(!x.ok||!x.reference) process.exit(1); process.stdout.write(x.reference)")"
+          npx wrangler d1 execute badawifour-prod --remote --command="DELETE FROM contact_messages WHERE id='$smoke_ref';" --config wrangler.deploy.json > /dev/null
+          echo "Production contact form smoke test passed and cleaned up: $smoke_ref"
