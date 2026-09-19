@@ -26,6 +26,12 @@ export const PRODUCTS = [{
   finish: 'Inox',
   warrantyMonths: 12,
   installationIncluded: false,
+  physical: {
+    widthCm: 65,
+    depthCm: 55,
+    heightCm: 55,
+    netWeightKg: 12
+  },
   media: {
     product: [
       productImage('547a2fde-1669-42a2-bc58-edf550c927b7'),
@@ -59,6 +65,16 @@ export const PRODUCTS = [{
       fr: 'Commandes regroupées sur le côté droit de la façade',
       en: 'Controls grouped on the right side of the front panel',
       ar: 'أزرار التحكم مجمعة في الجهة اليمنى من الواجهة'
+    },
+    dimensions: {
+      fr: '65 × 55 × 55 cm',
+      en: '65 × 55 × 55 cm',
+      ar: '65 × 55 × 55 سم'
+    },
+    weight: {
+      fr: '12 kg',
+      en: '12 kg',
+      ar: '12 كغ'
     }
   },
   retailer: RETAILER
