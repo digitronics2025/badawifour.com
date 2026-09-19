@@ -14,7 +14,7 @@ const securityHeaders = {
   'permissions-policy':'camera=(), microphone=(), geolocation=(), payment=()',
   'cross-origin-opener-policy':'same-origin',
   'x-frame-options':'DENY',
-  'content-security-policy':"default-src 'self'; img-src 'self' https://digitronics.ma data:; media-src 'self' https://digitronics.ma; connect-src 'self'; style-src 'self'; script-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://wa.me https://digitronics.ma; upgrade-insecure-requests"
+  'content-security-policy':"default-src 'self'; img-src 'self' https://digitronics.ma data:; media-src 'self' https://digitronics.ma; connect-src 'self' https://cloudflareinsights.com; style-src 'self'; script-src 'self' https://static.cloudflareinsights.com; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://wa.me https://digitronics.ma; upgrade-insecure-requests"
 };
 
 function json(data,status=200,extra={}){
