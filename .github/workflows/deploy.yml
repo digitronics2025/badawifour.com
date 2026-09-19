@@ -21,10 +21,11 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_ZONE_ID: fc4e3cff0d309c38af2b474345379804
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
+          package-manager-cache: false
 
       - name: Check Cloudflare credentials
         shell: bash
@@ -147,29 +148,55 @@ jobs:
           npx wrangler d1 list --json > /tmp/d1.json
           node scripts/make-production-config.mjs /tmp/d1.json
 
-      - name: Apply D1 schema
-        run: npx wrangler d1 execute badawifour-prod --remote --file=./migrations/0001_init.sql --config wrangler.deploy.json
+      - name: Apply D1 migrations
+        run: npx wrangler d1 migrations apply badawifour-prod --remote --config wrangler.deploy.json
 
       - name: Deploy Worker and custom domains
         run: npx wrangler deploy --config wrangler.deploy.json
 
-      - name: Rotate anti-abuse salt
+      - name: Reconcile Worker runtime secrets
         shell: bash
         run: |
           set -euo pipefail
-          node -e "process.stdout.write(require('crypto').randomBytes(32).toString('hex'))" | npx wrangler secret put RATE_LIMIT_SALT --config wrangler.deploy.json
+          npx wrangler secret list --format json --config wrangler.deploy.json > /tmp/worker-secrets.json
+
+          if ! node -e "const x=require('/tmp/worker-secrets.json'); process.exit(x.some(v=>v.name==='RATE_LIMIT_SALT')?0:1)"; then
+            echo "Creating RATE_LIMIT_SALT for the first time."
+            node -e "process.stdout.write(require('crypto').randomBytes(32).toString('hex'))" | npx wrangler secret put RATE_LIMIT_SALT --config wrangler.deploy.json
+          else
+            echo "RATE_LIMIT_SALT already exists; preserving it."
+          fi
+
+          if node -e "const x=require('/tmp/worker-secrets.json'); process.exit(x.some(v=>v.name==='CLOUDFLARE_API_TOKEN')?0:1)"; then
+            echo "Removing accidental deployment credential from Worker runtime."
+            printf '%s\n' '{"CLOUDFLARE_API_TOKEN":null}' > /tmp/remove-runtime-secret.json
+            npx wrangler secret bulk /tmp/remove-runtime-secret.json --config wrangler.deploy.json
+          fi
 
       - name: Verify production
         shell: bash
         run: |
           set -euo pipefail
-          for i in {1..12}; do
-            if curl --fail --silent --show-error --max-time 15 https://badawifour.com/api/health > /tmp/health.json; then break; fi
+          health_ok=0
+          for i in {1..18}; do
+            if curl --fail --silent --show-error --max-time 15 https://badawifour.com/api/health > /tmp/health.json; then
+              health_ok=1
+              break
+            fi
             sleep 5
           done
+          test "$health_ok" -eq 1 || { echo "::error::Production health endpoint never became reachable."; exit 1; }
           node -e "const x=require('/tmp/health.json'); if(!x.ok||!x.db_bound||!x.uploads_bound) process.exit(1)"
-          curl --fail --silent --show-error --max-time 20 https://badawifour.com/fr/ > /dev/null
-          curl --fail --silent --show-error --max-time 20 https://badawifour.com/ar/ > /dev/null
-          curl --fail --silent --show-error --max-time 20 https://badawifour.com/en/ > /dev/null
+
+          for path in /fr/ /ar/ /en/ /fr/products/ /fr/products/bf65inoxp/ /fr/support/guides/before-installation/ /sitemap.xml /manifest.webmanifest /.well-known/security.txt; do
+            curl --fail --silent --show-error --max-time 20 "https://badawifour.com$path" > /dev/null
+          done
+
           curl --fail --silent --show-error --max-time 20 https://badawifour.com/api/retailer/bf65inoxp > /tmp/retailer.json
           node -e "const x=require('/tmp/retailer.json'); if(x.source!=='Digitronics') process.exit(1)"
+
+          curl --silent --show-error --head --max-time 20 https://www.badawifour.com/fr/ > /tmp/www-headers.txt
+          grep -qi '^location: https://badawifour.com/fr/' /tmp/www-headers.txt
+
+          curl --silent --show-error --head --max-time 20 https://badawifour.com/fr/ > /tmp/headers.txt
+          grep -qi '^x-content-type-options: nosniff' /tmp/headers.txt

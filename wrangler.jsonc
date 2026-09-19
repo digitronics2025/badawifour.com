@@ -16,5 +16,10 @@
     "SITE_ORIGIN": "https://badawifour.com",
     "RETAILER_PRODUCT_URL": "https://digitronics.ma/fr/produit/badawi-four-bf65inoxp-cuisinere-a-gaz-4-feux",
     "SUPPORT_PHONE": "212664999733"
+  },
+  "triggers": {
+    "crons": [
+      "17 3 * * 1"
+    ]
   }
 }
