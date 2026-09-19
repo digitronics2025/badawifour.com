@@ -202,15 +202,22 @@ function where(l){
   );
 }
 
-const field=(label,name,type='text',extra='')=>`<label><span>${esc(label)}</span><input name="${name}" type="${type}" ${extra}></label>`;
-const textarea=(label,name)=>`<label class="full"><span>${esc(label)}</span><textarea name="${name}" rows="5" required maxlength="3000"></textarea></label>`;
-const select=(label,name,options,extra='')=>`<label><span>${esc(label)}</span><select name="${name}" ${extra}>${options.map(([value,text])=>`<option value="${esc(value)}">${esc(text)}</option>`).join('')}</select></label>`;
+const requiredMark=(required)=>required?'<span class="required-mark" aria-hidden="true"> *</span>':'';
+const field=(label,name,type='text',extra='')=>{
+  const required=/\brequired\b/.test(extra);
+  return `<label><span>${esc(label)}${requiredMark(required)}</span><input name="${name}" type="${type}" ${required?'aria-required="true"':''} ${extra}></label>`;
+};
+const textarea=(label,name)=>`<label class="full"><span>${esc(label)}${requiredMark(true)}</span><textarea name="${name}" rows="5" required aria-required="true" maxlength="3000"></textarea></label>`;
+const select=(label,name,options,extra='')=>{
+  const required=/\brequired\b/.test(extra);
+  return `<label><span>${esc(label)}${requiredMark(required)}</span><select name="${name}" ${required?'aria-required="true"':''} ${extra}>${options.map(([value,text])=>`<option value="${esc(value)}">${esc(text)}</option>`).join('')}</select></label>`;
+};
 function formPage(l,type,title,lead,fields,current=5){
   const t=T[l];
   const path=type==='contact'?'contact/':type==='professionals'?'professionals/':`support/${type==='registration'?'register':'request'}/`;
   return page(l,`${title} — BADAWI`,lead,path,
     `<section class="page-hero warm"><div class="shell">${breadcrumb(l,[{label:'BADAWI',url:p(l)},...(type==='registration'||type==='support'?[{label:t.nav[2],url:p(l,'support/')}]:[]),{label:title}])}<h1>${esc(title)}</h1><p>${esc(lead)}</p></div></section>
-    <section class="section"><div class="shell form-layout"><form data-api-form="${type}" data-success-prefix="${esc(t.formSuccess)}" data-error-message="${esc(t.formError)}" enctype="multipart/form-data"><input type="hidden" name="locale" value="${l}"><input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true"><input type="hidden" name="started_at" value="">${fields}<label class="consent"><input type="checkbox" name="privacy_consent" value="1" required><span>${esc(t.labels.privacyConsent)} <a class="inline-link" href="${p(l,'privacy/')}" target="_blank" rel="noopener">${esc(t.privacy)}</a></span></label><button class="btn dark" type="submit">${esc(t.send)} <span aria-hidden="true">↗</span></button><p data-form-status role="status" aria-live="polite"></p></form><aside><h2>WhatsApp</h2>${trackedBtn(wa(l,'general'),'WhatsApp','whatsapp_click','support-whatsapp','dark','rel="noopener"')}<p>${esc(RETAILER_INFO.phoneDisplay)}</p><p class="muted">${esc(t.supportText)}</p></aside></div></section>`,
+    <section class="section"><div class="shell form-layout"><form data-api-form="${type}" aria-describedby="required-note" data-success-prefix="${esc(t.formSuccess)}" data-error-message="${esc(t.formError)}" enctype="multipart/form-data"><input type="hidden" name="locale" value="${l}"><input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true"><input type="hidden" name="started_at" value=""><p id="required-note" class="required-note">${l==='ar'?'* حقل مطلوب':l==='en'?'* Required field':'* Champ obligatoire'}</p>${fields}<label class="consent"><input type="checkbox" name="privacy_consent" value="1" required aria-required="true"><span>${esc(t.labels.privacyConsent)}<span class="required-mark" aria-hidden="true"> *</span> <a class="inline-link" href="${p(l,'privacy/')}" target="_blank" rel="noopener">${esc(t.privacy)}</a></span></label><button class="btn dark" type="submit">${esc(t.send)} <span aria-hidden="true">↗</span></button><p data-form-status role="status" aria-live="polite"></p></form><aside><h2>WhatsApp</h2>${trackedBtn(wa(l,'general'),'WhatsApp','whatsapp_click','support-whatsapp','dark','rel="noopener"')}<p>${esc(RETAILER_INFO.phoneDisplay)}</p><p class="muted">${esc(t.supportText)}</p></aside></div></section>`,
     current
   );
 }

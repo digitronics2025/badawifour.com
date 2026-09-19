@@ -84,3 +84,6 @@ nav a[aria-current=page]{font-weight:800}
   html{scroll-behavior:auto}
   *,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
 }
+
+.required-note{grid-column:1/-1;margin:0 0 4px;color:var(--muted);font-size:12px}
+.required-mark{color:var(--red);font-weight:900}
