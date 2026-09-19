@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "badawifour-com",
+  "main": "src/worker.mjs",
+  "compatibility_date": "2026-09-19",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "SITE_ORIGIN": "https://badawifour.com",
+    "RETAILER_PRODUCT_URL": "https://digitronics.ma/fr/produit/badawi-four-bf65inoxp-cuisinere-a-gaz-4-feux",
+    "SUPPORT_PHONE": "212664999733"
+  }
+}
