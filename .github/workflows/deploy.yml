@@ -1,23 +1,92 @@
-name: Deploy Cloudflare Worker
+name: Deploy BADAWI to Cloudflare
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: badawifour-production
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install --no-audit --no-fund
-      - run: npm run check
-      - name: Deploy
-        run: npx wrangler deploy
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Check Cloudflare credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo "Missing CLOUDFLARE_API_TOKEN"; exit 2; }
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo "Missing CLOUDFLARE_ACCOUNT_ID"; exit 2; }
+
+      - name: Install deployment tooling
+        run: npm install --no-audit --no-fund
+
+      - name: Build and test
+        run: npm run check
+
+      - name: Provision D1 if needed
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 list --json > /tmp/d1.json
+          if ! node -e "const x=require('/tmp/d1.json'); const a=Array.isArray(x)?x:(x.result||x.databases||[]); process.exit(a.some(v=>(v.name||v.database_name)==='badawifour-prod')?0:1)"; then
+            npx wrangler d1 create badawifour-prod
+            npx wrangler d1 list --json > /tmp/d1.json
+          fi
+
+      - name: Provision private R2 bucket if needed
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler r2 bucket list --json > /tmp/r2.json
+          if ! node -e "const x=require('/tmp/r2.json'); const a=Array.isArray(x)?x:(x.result||x.buckets||[]); process.exit(a.some(v=>(v.name||v.bucket_name)==='badawifour-private-uploads')?0:1)"; then
+            npx wrangler r2 bucket create badawifour-private-uploads
+          fi
+
+      - name: Generate production Wrangler config
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 list --json > /tmp/d1.json
+          node scripts/make-production-config.mjs /tmp/d1.json
+
+      - name: Apply D1 schema
+        run: npx wrangler d1 execute badawifour-prod --remote --file=./migrations/0001_init.sql --config wrangler.deploy.json
+
+      - name: Deploy Worker and custom domains
+        run: npx wrangler deploy --config wrangler.deploy.json
+
+      - name: Rotate anti-abuse salt
+        shell: bash
+        run: |
+          set -euo pipefail
+          node -e "process.stdout.write(require('crypto').randomBytes(32).toString('hex'))" | npx wrangler secret put RATE_LIMIT_SALT --config wrangler.deploy.json
+
+      - name: Verify production
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in {1..12}; do
+            if curl --fail --silent --show-error --max-time 15 https://badawifour.com/api/health > /tmp/health.json; then break; fi
+            sleep 5
+          done
+          node -e "const x=require('/tmp/health.json'); if(!x.ok||!x.db_bound||!x.uploads_bound) process.exit(1)"
+          curl --fail --silent --show-error --max-time 20 https://badawifour.com/fr/ > /dev/null
+          curl --fail --silent --show-error --max-time 20 https://badawifour.com/ar/ > /dev/null
+          curl --fail --silent --show-error --max-time 20 https://badawifour.com/en/ > /dev/null
+          curl --fail --silent --show-error --max-time 20 https://badawifour.com/api/retailer/bf65inoxp > /tmp/retailer.json
+          node -e "const x=require('/tmp/retailer.json'); if(x.source!=='Digitronics') process.exit(1)"
