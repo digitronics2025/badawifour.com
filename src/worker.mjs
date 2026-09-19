@@ -1,3 +1,5 @@
+import { PRODUCTS, getProduct } from './catalog.mjs';
+
 const MAX_UPLOAD = 6 * 1024 * 1024;
 const JSON_HEADERS = {'content-type':'application/json; charset=utf-8','cache-control':'no-store'};
 const EVENT_ALLOWLIST = new Set([
@@ -44,6 +46,11 @@ function validatePhone(value,requiredField=true){
 function nowIso(){return new Date().toISOString()}
 function id(prefix){return `${prefix}-${Date.now().toString(36)}-${crypto.randomUUID().slice(0,8)}`.toUpperCase()}
 function localeFrom(value){return ['fr','ar','en'].includes(value)?value:'fr'}
+function validateProductModel(value){
+  const model=required(value,50).toUpperCase();
+  if(!PRODUCTS.some((product)=>product.model===model)) throw new Error('invalid_model');
+  return model;
+}
 async function requireDb(env){if(!env.DB) throw new Error('database_not_configured');return env.DB}
 
 async function hashText(text){
@@ -143,7 +150,7 @@ async function registration(request,env){
     ref:id('BAD-R'),created:nowIso(),locale:localeFrom(fd.get('locale')),
     first:required(fd.get('first_name'),80),last:required(fd.get('last_name'),80),
     phone:validatePhone(fd.get('phone')),email:validateEmail(fd.get('email')),
-    model:required(fd.get('model'),50),serial:clean(fd.get('serial_number'),100),
+    model:validateProductModel(fd.get('model')),serial:clean(fd.get('serial_number'),100),
     purchase:clean(fd.get('purchase_date'),20),retailer:clean(fd.get('retailer'),120),
     invoice:clean(fd.get('invoice_reference'),120),
     marketing:fd.get('marketing_consent')?1:0,source:sourcePath(request)
@@ -168,7 +175,7 @@ async function support(request,env){
   const row={
     ref:id('BAD-S'),locale:localeFrom(fd.get('locale')),name:required(fd.get('name'),120),
     phone:validatePhone(fd.get('phone')),email:validateEmail(fd.get('email')),
-    model:required(fd.get('model'),50),serial:clean(fd.get('serial_number'),100),
+    model:validateProductModel(fd.get('model')),serial:clean(fd.get('serial_number'),100),
     category:required(fd.get('category'),50),description:required(fd.get('description'),3000)
   };
   let attachment='';
@@ -219,27 +226,29 @@ function extractProduct(html){
   price=(jsonPrice||metaPrice||textPrice)?.[1]?.replace(',','.')||'';
   const inStock=/https?:\\?\/\\?\/schema\.org\\?\/InStock|"availability"\s*:\s*"?InStock"?|>\s*En stock\s*</i.test(html);
   const outStock=/https?:\\?\/\\?\/schema\.org\\?\/OutOfStock|"availability"\s*:\s*"?OutOfStock"?|>\s*Rupture/i.test(html);
-  return {price:price?Number(price):null,currency:'MAD',in_stock:inStock?true:outStock?false:null};
+  const onOrder=/https?:\\?\/\\?\/schema\.org\\?\/(?:PreOrder|BackOrder)|"availability"\s*:\s*"?(?:PreOrder|BackOrder)"?|(?:Disponible\s+)?Sur\s+commande/i.test(html);
+  const availability=onOrder?'on_order':inStock?'in_stock':outStock?'out_of_stock':'unknown';
+  return {price:price?Number(price):null,currency:'MAD',availability,in_stock:availability==='in_stock'?true:availability==='out_of_stock'?false:null};
 }
-async function fetchRetailerData(env){
-  const url=env.RETAILER_PRODUCT_URL||'https://digitronics.ma/fr/produit/badawi-four-bf65inoxp-cuisinere-a-gaz-4-feux';
+async function fetchRetailerData(env,product){
+  const url=product.slug==='bf65inoxp'&&env.RETAILER_PRODUCT_URL?env.RETAILER_PRODUCT_URL:product.retailer.productUrl;
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),5000);
   try{
     const res=await fetch(url,{headers:{'user-agent':'BADAWI/1.0 (+https://badawifour.com)','accept':'text/html'},signal:controller.signal});
     if(!res.ok) throw new Error(`retailer_${res.status}`);
     const data=extractProduct(await res.text());
-    return {...data,url,source:'Digitronics',checked_at:nowIso()};
+    return {model:product.model,slug:product.slug,...data,url,source:'Digitronics',checked_at:nowIso()};
   }catch{
-    return {price:null,currency:'MAD',in_stock:null,url,source:'Digitronics',checked_at:nowIso()};
+    return {model:product.model,slug:product.slug,price:null,currency:'MAD',availability:'unknown',in_stock:null,url,source:'Digitronics',checked_at:nowIso()};
   }finally{clearTimeout(timer)}
 }
-async function retailer(request,env){
+async function retailer(request,env,product){
   const cache=caches.default;
-  const key=new Request('https://badawifour.com/__cache/retailer/bf65inoxp');
+  const key=new Request(`https://badawifour.com/__cache/retailer/${product.slug}`);
   const cached=await cache.match(key);
   if(cached) return cached;
-  const data=await fetchRetailerData(env);
+  const data=await fetchRetailerData(env,product);
   const response=json(data,200,{'cache-control':'public, max-age=300, s-maxage=600'});
   await cache.put(key,response.clone());
   return response;
@@ -270,7 +279,13 @@ async function api(request,env,url){
   if(url.pathname==='/api/health'&&request.method==='GET') return json({
     ok:true,service:'badawifour-com',db_bound:Boolean(env.DB),uploads_bound:Boolean(env.UPLOADS),time:nowIso()
   });
-  if(url.pathname==='/api/retailer/bf65inoxp'&&request.method==='GET') return retailer(request,env);
+  const retailerMatch=/^\/api\/retailer\/([^/]+)$/.exec(url.pathname);
+  if(retailerMatch){
+    const product=getProduct(retailerMatch[1]);
+    if(!product) return json({error:'not_found'},404);
+    if(request.method!=='GET') return json({error:'method_not_allowed'},405,{'allow':'GET'});
+    return retailer(request,env,product);
+  }
   if(request.method!=='POST') return json({error:'method_not_allowed'},405,{'allow':'GET, POST'});
   if(!sameSite(request,env)) return json({error:'origin_not_allowed'},403);
   try{
@@ -285,7 +300,7 @@ async function api(request,env,url){
     const client=new Set([
       'missing_required_field','privacy_consent_required','unsupported_content_type',
       'invalid_file_type','file_too_large','spam','too_fast','invalid_form_timing','form_expired',
-      'invalid_email','invalid_phone','contact_required','invalid_event'
+      'invalid_email','invalid_phone','invalid_model','contact_required','invalid_event'
     ]);
     const config=new Set(['database_not_configured','uploads_not_configured']);
     if(client.has(code)) return json({error:code},400);
@@ -335,4 +350,4 @@ export default {
   }
 };
 
-export {extractProduct,validateEmail,validatePhone,detectFileType};
+export {extractProduct,validateEmail,validatePhone,validateProductModel,detectFileType};

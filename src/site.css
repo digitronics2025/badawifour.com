@@ -16,6 +16,7 @@ nav a[aria-current=page]{font-weight:800}
 .trust-strip span{padding:16px 22px;text-align:center;font-size:13px;font-weight:750}
 .trust-strip span+span{border-inline-start:1px solid var(--line)}
 .catalog-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.catalog-grid.home-products{grid-template-columns:repeat(2,minmax(0,1fr))}
 .catalog-card{border:1px solid var(--line);border-radius:24px;overflow:hidden;background:#fff}
 .catalog-card>a:first-child{display:grid;place-items:center;background:linear-gradient(145deg,#f2efe9,#d8d5cf);aspect-ratio:1}
 .catalog-card>a:first-child img{width:90%;height:90%;object-fit:contain;mix-blend-mode:multiply}
@@ -49,8 +50,13 @@ nav a[aria-current=page]{font-weight:800}
 .retailer-rich>div:last-child{padding-inline-start:34px;border-inline-start:1px solid var(--line)}
 .retailer-trust{display:grid;gap:10px;margin:24px 0}
 .retailer-trust span{font-size:14px}
+.where-products{display:grid;gap:24px}
+.where-products article+article{border-top:1px solid var(--line);padding-top:24px}
+.where-products h3{font-size:26px;margin:0}
 .inline-link{display:inline-flex;margin-top:8px;text-decoration:underline;text-underline-offset:4px}
 .live-card{margin-top:12px}
+.availability-note{color:var(--muted);font-size:14px;margin-top:-12px}
+.single-product-image{grid-template-columns:1fr}
 .currency-hint,.muted{color:var(--muted);font-size:12px}
 .form-layout input,.form-layout textarea,.form-layout select{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink)}
 .form-layout input:focus,.form-layout textarea:focus,.form-layout select:focus{border-color:#4b4c47}
@@ -76,7 +82,7 @@ nav a[aria-current=page]{font-weight:800}
   .retailer-rich>div:last-child{padding-inline-start:0;border-inline-start:0;border-top:1px solid var(--line);padding-top:28px}
 }
 @media(max-width:620px){
-  .catalog-grid,.guide-grid{grid-template-columns:1fr}
+  .catalog-grid,.catalog-grid.home-products,.guide-grid{grid-template-columns:1fr}
   .section-head{display:block}
   .article-body{gap:38px}
   .article-body p{font-size:17px}

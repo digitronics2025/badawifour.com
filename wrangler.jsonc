@@ -12,6 +12,7 @@
       "/*",
       "!/assets/*",
       "!/brand/*",
+      "!/products/*",
       "!/favicon.svg",
       "!/favicon.ico",
       "!/apple-touch-icon.png",

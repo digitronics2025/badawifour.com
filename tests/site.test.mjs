@@ -2,9 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, access } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import worker, { extractProduct, validateEmail, validatePhone } from '../src/worker.mjs';
+import { createHash } from 'node:crypto';
+import sharp from 'sharp';
+import worker, { extractProduct, validateEmail, validatePhone, validateProductModel } from '../src/worker.mjs';
 import { GUIDES } from '../src/content.mjs';
-import { RETAILER } from '../src/catalog.mjs';
+import { PRODUCTS, RETAILER } from '../src/catalog.mjs';
 
 const root = fileURLToPath(new URL('../dist/', import.meta.url));
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
@@ -12,7 +14,7 @@ const languages = ['fr','ar','en'];
 const routes = [
   '',
   'products/',
-  'products/bf65inoxp/',
+  ...PRODUCTS.map((product)=>`products/${product.slug}/`),
   'inspiration/',
   'support/',
   'support/register/',
@@ -25,6 +27,20 @@ const routes = [
   'privacy/',
   'legal/'
 ];
+
+test('BF65CINOX source is approved and builds deterministic responsive assets', async () => {
+  const source = await readFile(projectRoot + 'src/products/v1/bf65cinox/bf65cinox-master.png');
+  assert.equal(createHash('sha256').update(source).digest('hex').toUpperCase(),'8F6E7419DBFB0DBC89DDB7441CCD43B43423C5320FC7EBCD7DC5F7601C4ED92A');
+  const expected = new Map([[320,400],[640,800],[960,1200],[1122,1402]]);
+  for (const [width,height] of expected) {
+    const path = root + `products/v1/bf65cinox/bf65cinox-${width}.webp`;
+    await access(path);
+    const metadata = await sharp(path).metadata();
+    assert.equal(metadata.format,'webp');
+    assert.equal(metadata.width,width);
+    assert.equal(metadata.height,height);
+  }
+});
 
 test('all localized pages are generated', async () => {
   for (const language of languages) {
@@ -48,6 +64,44 @@ test('product page has canonical, same-path hreflang and parseable JSON-LD', asy
   assert.equal(data[0].model,'BF65INOXP');
 });
 
+test('BF65CINOX is published in every locale with verified-only product data', async () => {
+  const expected={
+    fr:['Cuisinière à gaz','4 feux','60 × 60 × 90 cm'],
+    ar:['طباخة غاز','4 شعلات','60 × 60 × 90 سم'],
+    en:['Gas cooker','4 burners','60 × 60 × 90 cm']
+  };
+  for(const language of languages){
+    const html=await readFile(root+`${language}/products/bf65cinox/index.html`,'utf8');
+    assert.match(html,new RegExp(`rel="canonical" href="https://badawifour\\.com/${language}/products/bf65cinox/"`));
+    assert.match(html,/\/products\/v1\/bf65cinox\/bf65cinox-1122\.webp/);
+    assert.match(html,/imagesrcset="[^\"]*bf65cinox-320\.webp 320w[^\"]*bf65cinox-1122\.webp 1122w"/);
+    for(const value of expected[language]) assert.ok(html.includes(value),`${language} should contain ${value}`);
+    const json=html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/);
+    const data=JSON.parse(json[1]);
+    assert.equal(data[0].model,'BF65CINOX');
+    assert.equal(data[0].brand.name,'BADAWI');
+    assert.equal(data[0].image[0],'https://badawifour.com/products/v1/bf65cinox/bf65cinox-1122.webp');
+    assert.equal('offers' in data[0],false);
+    assert.equal(data[1]['@type'],'BreadcrumbList');
+  }
+});
+
+test('home, catalog, footer, sitemap and discovery expose both products', async () => {
+  for(const language of languages){
+    for(const route of ['','products/']){
+      const html=await readFile(root+`${language}/${route}index.html`,'utf8');
+      for(const product of PRODUCTS){
+        assert.match(html,new RegExp(`href="/${language}/products/${product.slug}/"`));
+        assert.ok(html.includes(product.model));
+      }
+    }
+  }
+  const sitemap=await readFile(root+'sitemap.xml','utf8');
+  const discovery=await readFile(root+'llms.txt','utf8');
+  assert.match(sitemap,/badawifour\.com\/fr\/products\/bf65cinox\//);
+  assert.match(discovery,/BF65CINOX: four-burner gas cooker/);
+});
+
 test('every WhatsApp button targets the verified Digitronics number', async () => {
   assert.equal(RETAILER.whatsapp.url,`https://wa.me/${RETAILER.whatsapp.number}`);
   for (const language of languages) {
@@ -61,6 +115,17 @@ test('every WhatsApp button targets the verified Digitronics number', async () =
       assert.match(html,/<svg class="whatsapp-icon"[^>]+aria-hidden="true"/);
       assert.doesNotMatch(html,/>WA<\/a>/);
     }
+  }
+});
+
+test('product WhatsApp links carry the correct localized model and page', async () => {
+  for(const language of languages){
+    const html=await readFile(root+`${language}/products/bf65cinox/index.html`,'utf8');
+    const href=html.match(/class="btn dark whatsapp-btn" href="([^"]+)"/)?.[1];
+    assert.ok(href,`${language} product WhatsApp link should exist`);
+    const decoded=decodeURIComponent(href);
+    assert.match(decoded,/BADAWI BF65CINOX/);
+    assert.match(decoded,new RegExp(`https://badawifour\\.com/${language}/products/bf65cinox/`));
   }
 });
 
@@ -136,6 +201,46 @@ test('product parser handles structured price and availability', () => {
   const parsed = extractProduct('<script>{"price":"999","availability":"InStock"}</script>');
   assert.equal(parsed.price, 999);
   assert.equal(parsed.in_stock, true);
+  assert.equal(parsed.availability,'in_stock');
+  const order=extractProduct('<script>{"price":"1999","availability":"OutOfStock"}</script><span>Disponible sur commande</span>');
+  assert.equal(order.availability,'on_order');
+  assert.equal(order.in_stock,null);
+});
+
+test('product forms expose only the catalog model allowlist', async () => {
+  assert.equal(validateProductModel('bf65inoxp'),'BF65INOXP');
+  assert.equal(validateProductModel('BF65CINOX'),'BF65CINOX');
+  assert.throws(()=>validateProductModel('BF65UNKNOWN'),/invalid_model/);
+  for(const route of ['support/register/','support/request/']){
+    const html=await readFile(root+`en/${route}index.html`,'utf8');
+    assert.match(html,/<select name="model"[^>]*required/);
+    for(const product of PRODUCTS) assert.match(html,new RegExp(`<option value="${product.model}">${product.model}</option>`));
+  }
+});
+
+test('retailer API allowlists products, separates slugs and reports on-order', async () => {
+  const unknown=await worker.fetch(new Request('https://badawifour.com/api/retailer/unknown'),{});
+  assert.equal(unknown.status,404);
+  const previousCaches=globalThis.caches;
+  const previousFetch=globalThis.fetch;
+  const keys=[];
+  globalThis.caches={default:{match:async()=>null,put:async(key)=>keys.push(key.url)}};
+  globalThis.fetch=async()=>new Response('<script>{"price":"1999","availability":"OutOfStock"}</script><div>Sur commande</div>');
+  try{
+    const response=await worker.fetch(new Request('https://badawifour.com/api/retailer/bf65cinox'),{});
+    assert.equal(response.status,200);
+    const data=await response.json();
+    assert.equal(data.model,'BF65CINOX');
+    assert.equal(data.slug,'bf65cinox');
+    assert.equal(data.price,1999);
+    assert.equal(data.availability,'on_order');
+    assert.equal(data.in_stock,null);
+    assert.deepEqual(keys,['https://badawifour.com/__cache/retailer/bf65cinox']);
+  }finally{
+    globalThis.fetch=previousFetch;
+    if(previousCaches===undefined) delete globalThis.caches;
+    else globalThis.caches=previousCaches;
+  }
 });
 
 test('server validators reject malformed contact data', () => {

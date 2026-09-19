@@ -129,7 +129,7 @@ const summary={
 console.log('BADAWI Lighthouse:',JSON.stringify(summary));
 
 if (process.env.LIGHTHOUSE_STRICT === '1') {
-  const thresholds={performance:85,accessibility:100,'best-practices':100,seo:100};
+  const thresholds={performance:95,accessibility:100,'best-practices':100,seo:100};
   const failures=Object.entries(thresholds)
     .filter(([key,minimum])=>(summary.scores[key] || 0)<minimum)
     .map(([key,minimum])=>`${key} ${summary.scores[key] || 0} < ${minimum}`);

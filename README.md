@@ -40,4 +40,15 @@ Preferred: Cloudflare Workers Builds connected to GitHub. GitHub Actions deploym
 
 ## Product truth policy
 
-Only verified BF65INOXP facts are published. Do not infer dimensions, capacity, gas configuration, country of manufacture or safety features from photography. Add verified specifications to `scripts/build.mjs` only after checking the manufacturer technical sheet.
+Only verified product facts are published. The current catalog contains BF65INOXP and BF65CINOX; each product owns its localized content, verified specifications, media and Digitronics URL in `src/catalog.mjs`. Do not infer dimensions, capacity, gas configuration, country of manufacture, safety features or other claims from photography.
+
+BF65CINOX uses a repository-owned approved source image. The build verifies its SHA-256 and source dimensions before generating non-upscaled responsive WebP assets under `/products/v1/bf65cinox/`. Add or change verified specifications only after checking an authoritative technical source, and update the catalog, tests and discovery output together.
+
+## Product-aware public interfaces
+
+- Product pages: `/{fr|ar|en}/products/{product-slug}/`
+- Retailer data: `GET /api/retailer/{product-slug}` for catalog allowlisted slugs
+- Forms accept only catalog model numbers and retain the existing D1 schema
+- WhatsApp actions always target Digitronics and include the selected product model and localized product URL
+
+Retailer responses expose `model`, `slug`, `price`, `currency`, `availability`, backward-compatible `in_stock`, `url`, `source` and `checked_at`. Availability is one of `in_stock`, `on_order`, `out_of_stock` or `unknown`; never publish retailer price as static Product structured data.

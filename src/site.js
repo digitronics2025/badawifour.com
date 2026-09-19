@@ -3,9 +3,9 @@ const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const locale=document.documentElement.lang||'fr';
 
 const copy={
-  fr:{fallback:'Voir chez Digitronics',in:'En stock',out:'Vérifier',success:'Merci. Référence : ',error:'Envoi impossible pour le moment. Vous pouvez nous contacter sur WhatsApp.'},
-  ar:{fallback:'شاهد لدى Digitronics',in:'متوفر',out:'تحقق',success:'شكراً. المرجع: ',error:'تعذر الإرسال حالياً. يمكنك التواصل معنا عبر واتساب.'},
-  en:{fallback:'See at Digitronics',in:'In stock',out:'Check',success:'Thank you. Reference: ',error:'Unable to send right now. You can contact us on WhatsApp.'}
+  fr:{fallback:'Voir chez Digitronics',in:'En stock',order:'Sur commande',out:'Rupture de stock',unknown:'Vérifier',success:'Merci. Référence : ',error:'Envoi impossible pour le moment. Vous pouvez nous contacter sur WhatsApp.'},
+  ar:{fallback:'شاهد لدى Digitronics',in:'متوفر',order:'متوفر بالطلب',out:'غير متوفر',unknown:'تحقق',success:'شكراً. المرجع: ',error:'تعذر الإرسال حالياً. يمكنك التواصل معنا عبر واتساب.'},
+  en:{fallback:'See at Digitronics',in:'In stock',order:'Available to order',out:'Out of stock',unknown:'Check',success:'Thank you. Reference: ',error:'Unable to send right now. You can contact us on WhatsApp.'}
 }[locale]||{};
 
 const menuButton=$('.menu');
@@ -38,7 +38,7 @@ if(gallery){
       current.alt=image.alt;
       $$('[data-thumb]',gallery).forEach((other)=>other.setAttribute('aria-current','false'));
       button.setAttribute('aria-current','true');
-      track('gallery_interaction',{product:'BF65INOXP',destination:String(index+1)});
+      track('gallery_interaction',{product:gallery.dataset.product||'',destination:String(index+1)});
     });
   });
 }
@@ -103,13 +103,15 @@ function initializeForms(){
     if(button)button.disabled=true;
     if(status)status.textContent='';
     try{
-      const response=await fetch('/api/'+form.dataset.apiForm,{method:'POST',body:new FormData(form),headers:{accept:'application/json'}});
+      const payload=new FormData(form);
+      const selectedModel=String(payload.get('model')||'');
+      const response=await fetch('/api/'+form.dataset.apiForm,{method:'POST',body:payload,headers:{accept:'application/json'}});
       const data=await response.json().catch(()=>({}));
       if(!response.ok)throw new Error(data.error||'submit_failed');
       if(status)status.textContent=(form.dataset.successPrefix||copy.success)+(data.reference||'');
       const type=form.dataset.apiForm;
-      if(type==='registration')track('registration_completed',{product:'BF65INOXP'});
-      else if(type==='support')track('support_completed',{product:'BF65INOXP'});
+      if(type==='registration')track('registration_completed',{product:selectedModel});
+      else if(type==='support')track('support_completed',{product:selectedModel});
       else if(type==='professionals')track('professional_lead');
       else if(type==='contact')track('contact_completed');
       form.reset();
@@ -125,17 +127,18 @@ function initializeForms(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initializeForms,{once:true});
 else initializeForms();
 
-const live=$('[data-retailer-live]');
-if(live){
+const liveCards=$$('[data-retailer-live]');
+liveCards.forEach((live)=>{
+  const slug=live.dataset.productSlug||'bf65inoxp';
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),5000);
-  fetch('/api/retailer/bf65inoxp',{signal:controller.signal})
+  fetch('/api/retailer/'+encodeURIComponent(slug),{signal:controller.signal})
     .then((response)=>response.ok?response.json():Promise.reject())
     .then((data)=>{
       const price=$('[data-price]',live),stock=$('[data-stock]',live);
       if(price)price.textContent=data.price?new Intl.NumberFormat(locale==='ar'?'ar-MA':locale==='en'?'en-MA':'fr-MA',{maximumFractionDigits:2}).format(data.price)+' '+(data.currency||'MAD'):copy.fallback;
-      if(stock)stock.textContent=data.in_stock===true?copy.in:data.in_stock===false?copy.out:'—';
+      if(stock)stock.textContent=data.availability==='in_stock'?copy.in:data.availability==='on_order'?copy.order:data.availability==='out_of_stock'?copy.out:copy.unknown;
     })
     .catch(()=>{})
     .finally(()=>clearTimeout(timer));
-}
+});

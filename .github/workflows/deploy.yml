@@ -201,7 +201,7 @@ jobs:
             return 1
           }
 
-          for path in /fr/ /ar/ /en/ /fr/products/ /fr/products/bf65inoxp/ /fr/support/guides/before-installation/ /sitemap.xml /manifest.webmanifest /favicon.svg /favicon.ico /apple-touch-icon.png /brand/v1/badawi-four-logo.svg /brand/v1/badawi-four-logo-reversed.svg /brand/v1/badawi-four-lockup.svg /brand/v1/android-chrome-192x192.png /brand/v1/android-chrome-512x512.png /brand/v1/maskable-icon-512x512-dark-bg.png /.well-known/security.txt; do
+          for path in /fr/ /ar/ /en/ /fr/products/ /fr/products/bf65inoxp/ /ar/products/bf65cinox/ /en/products/bf65cinox/ /fr/products/bf65cinox/ /products/v1/bf65cinox/bf65cinox-320.webp /products/v1/bf65cinox/bf65cinox-640.webp /products/v1/bf65cinox/bf65cinox-960.webp /products/v1/bf65cinox/bf65cinox-1122.webp /fr/support/guides/before-installation/ /sitemap.xml /manifest.webmanifest /favicon.svg /favicon.ico /apple-touch-icon.png /brand/v1/badawi-four-logo.svg /brand/v1/badawi-four-logo-reversed.svg /brand/v1/badawi-four-lockup.svg /brand/v1/android-chrome-192x192.png /brand/v1/android-chrome-512x512.png /brand/v1/maskable-icon-512x512-dark-bg.png /.well-known/security.txt; do
             check_url "https://badawifour.com$path"
           done
 
@@ -219,6 +219,7 @@ jobs:
           check_asset_headers /apple-touch-icon.png 'image/png' 'public, max-age=86400'
           check_asset_headers /brand/v1/badawi-four-logo.svg 'image/svg\+xml' 'public, max-age=31536000, immutable'
           check_asset_headers /brand/v1/android-chrome-192x192.png 'image/png' 'public, max-age=31536000, immutable'
+          check_asset_headers /products/v1/bf65cinox/bf65cinox-1122.webp 'image/webp' 'public, max-age=31536000, immutable'
 
           curl --fail --silent --show-error --max-time 20 https://badawifour.com/manifest.webmanifest > /tmp/manifest.json
           node -e "const x=require('/tmp/manifest.json'); if(x.name!=='BADAWI FOUR'||!x.icons?.some(v=>v.purpose==='maskable')) process.exit(1)"
@@ -227,15 +228,20 @@ jobs:
           grep -q '/brand/v1/badawi-four-lockup.svg' /tmp/home.html
           grep -q 'https://badawifour.com/brand/v1/badawi-four-logo.svg' /tmp/home.html
 
-          retailer_ok=0
-          for i in {1..6}; do
-            if curl --fail --silent --show-error --max-time 20 https://badawifour.com/api/retailer/bf65inoxp > /tmp/retailer.json && node -e "const x=require('/tmp/retailer.json'); if(x.source!=='Digitronics') process.exit(1)"; then
-              retailer_ok=1
-              break
-            fi
-            sleep 3
+          for slug in bf65inoxp bf65cinox; do
+            retailer_ok=0
+            for i in {1..6}; do
+              if curl --fail --silent --show-error --max-time 20 "https://badawifour.com/api/retailer/$slug" > "/tmp/retailer-$slug.json" && SLUG="$slug" node -e "const x=require('/tmp/retailer-'+process.env.SLUG+'.json'); if(x.source!=='Digitronics'||x.slug!==process.env.SLUG||!['in_stock','on_order','out_of_stock','unknown'].includes(x.availability)) process.exit(1)"; then
+                retailer_ok=1
+                break
+              fi
+              sleep 3
+            done
+            test "$retailer_ok" -eq 1 || { echo "::error::Retailer API failed verification for $slug."; exit 1; }
           done
-          test "$retailer_ok" -eq 1 || { echo "::error::Retailer API failed verification."; exit 1; }
+
+          unknown_code="$(curl --silent --show-error --output /tmp/retailer-unknown.json --write-out '%{http_code}' --max-time 20 https://badawifour.com/api/retailer/unknown)"
+          test "$unknown_code" = "404" || { echo "::error::Unknown retailer slug did not return 404."; exit 1; }
 
           redirect_ok=0
           for i in {1..6}; do
@@ -291,7 +297,7 @@ jobs:
             -F 'locale=en' -F 'website=' -F "started_at=$started_at" \
             -F 'first_name=BADAWI' -F 'last_name=Deployment Smoke Test' \
             -F 'phone=+212600000000' -F 'email=smoke@badawifour.invalid' \
-            -F 'model=BF65INOXP' -F 'serial_number=SMOKE-TEST' \
+            -F 'model=BF65CINOX' -F 'serial_number=SMOKE-TEST' \
             -F 'retailer=Automated production verification' \
             -F 'privacy_consent=1' -F 'receipt=@/tmp/badawi-smoke.png;type=image/png' \
             https://badawifour.com/api/registration > /tmp/registration-smoke.json

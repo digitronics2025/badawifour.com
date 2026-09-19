@@ -2,6 +2,7 @@ import { mkdir, rm, writeFile, readFile, copyFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import sharp from 'sharp';
 
 import { T } from '../src/i18n.mjs';
 import { PRODUCTS, RETAILER as RETAILER_INFO } from '../src/catalog.mjs';
@@ -9,6 +10,8 @@ import { GUIDES } from '../src/content.mjs';
 
 const OUT=fileURLToPath(new URL('../dist/',import.meta.url));
 const BRAND_SOURCE=fileURLToPath(new URL('../src/brand/v1/',import.meta.url));
+const BF65CINOX_SOURCE=fileURLToPath(new URL('../src/products/v1/bf65cinox/bf65cinox-master.png',import.meta.url));
+const BF65CINOX_WIDTHS=[320,640,960,1122];
 const ORIGIN='https://badawifour.com';
 const PRODUCT_DATA=PRODUCTS[0];
 const RETAILER=RETAILER_INFO.productUrl;
@@ -34,17 +37,22 @@ const BRAND_FILES=[
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const p=(l,x='')=>`/${l}/${x}`.replace(/\/{2,}/g,'/').replace(/(?<!\/)$/,'/');
 const absolute=(l,x='')=>ORIGIN+p(l,x);
-const wa=(l,context='product')=>{
-  const messages={
-    fr:context==='general'?'Bonjour, je souhaite avoir plus d’informations sur BADAWI.':"Bonjour, je souhaite avoir plus d’informations sur BADAWI BF65INOXP.",
-    en:context==='general'?'Hello, I would like more information about BADAWI.':'Hello, I would like more information about BADAWI BF65INOXP.',
-    ar:context==='general'?'مرحبا، أريد معلومات عن BADAWI.':'مرحبا، أريد معلومات عن BADAWI BF65INOXP.'
+const wa=(l,context='product',product=PRODUCT_DATA)=>{
+  const model=product?.model||PRODUCT_DATA.model;
+  const messages=context==='general'?{
+    fr:'Bonjour, je souhaite avoir plus d’informations sur BADAWI.',
+    en:'Hello, I would like more information about BADAWI.',
+    ar:'مرحبا، أريد معلومات عن BADAWI.'
+  }:{
+    fr:`Bonjour, je souhaite avoir plus d’informations sur BADAWI ${model}.`,
+    en:`Hello, I would like more information about BADAWI ${model}.`,
+    ar:`مرحبا، أريد معلومات عن BADAWI ${model}.`
   };
-  return `${WHATSAPP.url}?text=${encodeURIComponent(messages[l]+'\n'+absolute(l,context==='product'?'products/bf65inoxp/':''))}`;
+  return `${WHATSAPP.url}?text=${encodeURIComponent(messages[l]+'\n'+absolute(l,context==='product'?`products/${product.slug}/`:''))}`;
 };
 const whatsappIcon=()=>`<svg class="whatsapp-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>`;
 const btn=(u,t,k='primary',a='')=>`<a class="btn ${k}" href="${u}" ${a}>${esc(t)}<span aria-hidden="true">↗</span></a>`;
-const whatsappBtn=(l,context='product',k='whatsapp',extra='')=>`<a class="btn ${k} whatsapp-btn" href="${wa(l,context)}" data-track="whatsapp_click" data-destination="Digitronics WhatsApp" ${extra}>${whatsappIcon()}<span>${esc(T[l].whatsapp)}</span><span class="btn-arrow" aria-hidden="true">↗</span></a>`;
+const whatsappBtn=(l,context='product',k='whatsapp',extra='',product=PRODUCT_DATA)=>`<a class="btn ${k} whatsapp-btn" href="${wa(l,context,product)}" data-track="whatsapp_click" data-destination="Digitronics WhatsApp" ${extra}>${whatsappIcon()}<span>${esc(T[l].whatsapp)}</span><span class="btn-arrow" aria-hidden="true">↗</span></a>`;
 const eyebrow=s=>`<p class="eyebrow">${esc(s)}</p>`;
 const responsive=(media,alt,cls='',eager=false,sizes='100vw')=>{
   const src=typeof media==='string'?media:media.src;
@@ -65,24 +73,39 @@ function header(l,current='',path=''){
 }
 function footer(l){
   const t=T[l];
-  return `<footer><div class="shell foot"><div>${logo(l,'footer')}<p>${esc(t.hero)}</p></div><div><a href="${p(l,'products/')}">${esc(t.nav[0])}</a><a href="${p(l,'products/bf65inoxp/')}">BF65INOXP</a><a href="${p(l,'support/')}">${esc(t.nav[2])}</a><a href="${p(l,'contact/')}">${l==='ar'?'اتصل بنا':'Contact'}</a></div><div><a href="${p(l,'privacy/')}">${esc(t.privacy)}</a><a href="${p(l,'legal/')}">${esc(t.legal)}</a><a href="${p(l,'professionals/')}">${esc(t.nav[5])}</a></div></div><div class="shell copy">© 2026 BADAWI FOUR · Casablanca, Morocco</div></footer>`;
+  return `<footer><div class="shell foot"><div>${logo(l,'footer')}<p>${esc(t.hero)}</p></div><div><a href="${p(l,'products/')}">${esc(t.nav[0])}</a>${PRODUCTS.map(product=>`<a href="${p(l,`products/${product.slug}/`)}">${esc(product.model)}</a>`).join('')}<a href="${p(l,'support/')}">${esc(t.nav[2])}</a><a href="${p(l,'contact/')}">${l==='ar'?'اتصل بنا':'Contact'}</a></div><div><a href="${p(l,'privacy/')}">${esc(t.privacy)}</a><a href="${p(l,'legal/')}">${esc(t.legal)}</a><a href="${p(l,'professionals/')}">${esc(t.nav[5])}</a></div></div><div class="shell copy">© 2026 BADAWI FOUR · Casablanca, Morocco</div></footer>`;
 }
-function head(l,title,desc,path,image=PRODUCT[0],schema=''){
+function head(l,title,desc,path,image=PRODUCT[0],schema='',imageAlt='BADAWI BF65INOXP'){
   const url=absolute(l,path),t=T[l];
-  return `<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><meta name="robots" content="index,follow,max-image-preview:large"><link rel="canonical" href="${url}">${LANGS.map(x=>`<link rel="alternate" hreflang="${x}" href="${absolute(x,path)}">`).join('')}<link rel="alternate" hreflang="x-default" href="${absolute('fr',path)}"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><link rel="preconnect" href="https://digitronics.ma" crossorigin><meta name="theme-color" content="#171817"><meta property="og:type" content="website"><meta property="og:site_name" content="BADAWI FOUR"><meta property="og:locale" content="${esc(t.locale)}"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${url}"><meta property="og:image" content="${image}"><meta property="og:image:alt" content="BADAWI BF65INOXP"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${esc(title)}"><meta name="twitter:description" content="${esc(desc)}"><meta name="twitter:image" content="${image}"><link rel="stylesheet" href="/assets/${CSS_FILE}"><script type="module" src="/assets/${JS_FILE}"></script>${schema?`<script type="application/ld+json">${schema}</script>`:''}`;
+  const socialImage=image.startsWith('/')?`${ORIGIN}${image}`:image;
+  return `<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><meta name="robots" content="index,follow,max-image-preview:large"><link rel="canonical" href="${url}">${LANGS.map(x=>`<link rel="alternate" hreflang="${x}" href="${absolute(x,path)}">`).join('')}<link rel="alternate" hreflang="x-default" href="${absolute('fr',path)}"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><link rel="preconnect" href="https://digitronics.ma" crossorigin><meta name="theme-color" content="#171817"><meta property="og:type" content="website"><meta property="og:site_name" content="BADAWI FOUR"><meta property="og:locale" content="${esc(t.locale)}"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${url}"><meta property="og:image" content="${socialImage}"><meta property="og:image:alt" content="${esc(imageAlt)}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${esc(title)}"><meta name="twitter:description" content="${esc(desc)}"><meta name="twitter:image" content="${socialImage}"><link rel="stylesheet" href="/assets/${CSS_FILE}"><script type="module" src="/assets/${JS_FILE}"></script>${schema?`<script type="application/ld+json">${schema}</script>`:''}`;
 }
 function imagePreload(path){
-  const media=path===''?FOOD[2]:path==='products/bf65inoxp/'?PRODUCT_DATA.media.product[0]:path==='about/'?FOOD[0]:null;
+  const productSlug=/^products\/([^/]+)\/$/.exec(path)?.[1];
+  const product=productSlug?PRODUCTS.find(item=>item.slug===productSlug):null;
+  const media=path===''?FOOD[2]:product?.media.product[0]||(path==='about/'?FOOD[0]:null);
   if(!media)return '';
   const src=typeof media==='string'?media:media.src;
   const srcset=typeof media==='string'?'':(media.srcset||[]).map(([w,u])=>`${u} ${w}w`).join(', ');
-  const sizes=path==='products/bf65inoxp/'?'(max-width:900px) 100vw, 58vw':'100vw';
+  const sizes=product?'(max-width:900px) 100vw, 58vw':'100vw';
   return `<link rel="preload" as="image" href="${src}"${srcset?` imagesrcset="${srcset}" imagesizes="${sizes}"`:''} fetchpriority="high" referrerpolicy="no-referrer">`;
 }
-const page=(l,title,desc,path,body,current='',schema='')=>`<!doctype html><html lang="${l}" dir="${T[l].dir}"><head>${head(l,title,desc,path,PRODUCT[0],schema)}${imagePreload(path)}</head><body>${header(l,current,path)}<main id="main">${body}</main>${footer(l)}${path?`<a class="float" data-track="whatsapp_click" data-destination="Digitronics WhatsApp" aria-label="${esc(T[l].whatsapp+' — Digitronics')}" href="${wa(l,'general')}" rel="noopener">${whatsappIcon()}</a>`:''}</body></html>`;
+const page=(l,title,desc,path,body,current='',schema='',socialImage=PRODUCT[0],imageAlt='BADAWI BF65INOXP')=>`<!doctype html><html lang="${l}" dir="${T[l].dir}"><head>${head(l,title,desc,path,socialImage,schema,imageAlt)}${imagePreload(path)}</head><body>${header(l,current,path)}<main id="main">${body}</main>${footer(l)}${path?`<a class="float" data-track="whatsapp_click" data-destination="Digitronics WhatsApp" aria-label="${esc(T[l].whatsapp+' — Digitronics')}" href="${wa(l,'general')}" rel="noopener">${whatsappIcon()}</a>`:''}</body></html>`;
 
 
 const localized=(l,values)=>values[l]||values.en||values.fr;
+const productCopy=(l,product)=>product.content?.[l]||{
+  name:`BADAWI ${product.model}`,
+  short:T[l].productLead,
+  description:T[l].productLead,
+  metaTitle:T[l].productTitle,
+  metaDescription:T[l].productLead
+};
+const productCard=(l,product)=>{
+  const copy=productCopy(l,product);
+  const discover=l==='ar'?'اكتشف المنتج':l==='en'?'Discover product':'Découvrir le produit';
+  return `<article class="catalog-card"><a href="${p(l,`products/${product.slug}/`)}" data-track="product_discovery" data-product="${esc(product.model)}">${responsive(product.media.product[0],copy.name,'',false,'(max-width:620px) 100vw, 50vw')}</a><div><span class="eyebrow">BADAWI</span><h2>${esc(product.model)}</h2><p>${esc(copy.short)}</p><div class="chips"><span>${esc(product.widthLabel)}</span><span>${esc(product.finish)}</span></div>${trackedBtn(p(l,`products/${product.slug}/`),discover,'product_discovery',product.model,'dark',`data-product="${esc(product.model)}"`)}</div></article>`;
+};
 const trackedBtn=(u,t,event,destination,k='primary',extra='')=>btn(u,t,k,`data-track="${event}" data-destination="${esc(destination)}" ${extra}`);
 function trustStrip(l){
   return `<div class="trust-strip"><div class="shell">${T[l].trust.map(item=>`<span>${esc(item)}</span>`).join('')}</div></div>`;
@@ -107,7 +130,7 @@ function home(l){
   return page(l,`BADAWI — ${t.hero}`,t.intro,'',
     `<section class="hero"><div class="hero-bg">${responsive(FOOD[2],t.hero,'',true)}</div><div class="shade"></div><div class="shell hero-copy">${eyebrow('BADAWI')}<h1>${esc(t.hero)}</h1><p>${esc(t.intro)}</p><div class="actions">${trackedBtn(p(l,'products/bf65inoxp/'),t.discover,'product_discovery','BF65INOXP','primary','data-product="BF65INOXP"')}${trackedBtn(p(l,'where-to-buy/'),t.buy,'where_to_buy_opened','where-to-buy','ghost')}${whatsappBtn(l,'product','whatsapp','data-product="BF65INOXP" rel="noopener"')}</div></div></section>
     ${trustStrip(l)}
-    <section class="section"><div class="shell split"><div class="product-card">${responsive(PRODUCT_DATA.media.product[1],'BADAWI BF65INOXP','',false,'(max-width:900px) 100vw, 55vw')}</div><div>${eyebrow(t.flag)}<h2>BF65INOXP</h2><p class="lede">${esc(t.flagText)}</p><div class="chips"><span>BF65INOXP</span><span>65 cm</span><span>INOX</span></div>${trackedBtn(p(l,'products/bf65inoxp/'),t.discover,'product_discovery','BF65INOXP','dark','data-product="BF65INOXP"')}</div></div></section>
+    <section class="section"><div class="shell"><div class="section-head"><div>${eyebrow(t.flag)}<h2>${esc(t.catalogTitle)}</h2></div></div><div class="catalog-grid home-products">${PRODUCTS.map(product=>productCard(l,product)).join('')}</div></div></section>
     <section class="section dark"><div class="shell">${eyebrow(l==='ar'?'على المائدة':l==='en'?'AT THE TABLE':'À TABLE')}<h2>${esc(t.emotion)}</h2><p class="lede light">${esc(t.emotionText)}</p><div class="food">${FOOD.map((src,i)=>img(src,[l==='ar'?'طبق مشوي':'Roast dish',l==='ar'?'من الفرن إلى المائدة':'From oven to table',l==='ar'?'مائدة مشتركة':'Shared table'][i])).join('')}</div></div></section>
     <section class="section warm"><div class="shell split"><div>${eyebrow(l==='ar'?'بعد الشراء':l==='en'?'AFTER PURCHASE':'APRÈS L’ACHAT')}<h2>${esc(t.supportTitle)}</h2><p class="lede">${esc(t.supportText)}</p>${btn(p(l,'support/'),t.nav[2],'dark')}</div><div class="support-links"><a href="${p(l,'support/register/')}">01 <b>${esc(t.register)}</b></a><a href="${p(l,'support/request/')}">02 <b>${esc(t.request)}</b></a><a href="${p(l,'where-to-buy/')}">03 <b>${esc(t.buy)}</b></a></div></div></section>
     ${guidesSection(l,false)}`,
@@ -119,11 +142,11 @@ function productsPage(l){
   const t=T[l];
   return page(l,`${t.catalogTitle} — BADAWI`,t.catalogLead,'products/',
     `<section class="page-hero warm"><div class="shell">${eyebrow(t.nav[0])}<h1>${esc(t.catalogTitle)}</h1><p>${esc(t.catalogLead)}</p></div></section>
-    <section class="section"><div class="shell"><div class="catalog-grid">${PRODUCTS.map(product=>`<article class="catalog-card"><a href="${p(l,`products/${product.slug}/`)}" data-track="product_discovery" data-product="${esc(product.model)}">${responsive(product.media.product[0],`BADAWI ${product.model}`,'',false,'(max-width:620px) 100vw, 33vw')}</a><div><span class="eyebrow">BADAWI</span><h2>${esc(product.model)}</h2><p>${esc(t.productLead)}</p><div class="chips"><span>${esc(product.widthLabel)}</span><span>${esc(product.finish)}</span></div>${trackedBtn(p(l,`products/${product.slug}/`),t.discover,'product_discovery',product.model,'dark',`data-product="${esc(product.model)}"`)}</div></article>`).join('')}</div></div></section>`,0
+    <section class="section"><div class="shell"><div class="catalog-grid">${PRODUCTS.map(product=>productCard(l,product)).join('')}</div></div></section>`,0
   );
 }
 
-function product(l){
+function bf65inoxpProduct(l){
   const t=T[l],facts=t.productFacts;
   const productSchema={
     '@context':'https://schema.org','@type':'Product',
@@ -154,10 +177,10 @@ function product(l){
   };
   return page(l,t.productTitle,t.productLead,'products/bf65inoxp/',
     `<section class="product-hero"><div class="shell product-grid">
-      <div class="gallery" data-gallery><div class="main">${responsive(media[0],'BADAWI BF65INOXP','gallery-current',true,'(max-width:900px) 100vw, 58vw')}</div>
+      <div class="gallery" data-gallery data-product="BF65INOXP"><div class="main">${responsive(media[0],'BADAWI BF65INOXP','gallery-current',true,'(max-width:900px) 100vw, 58vw')}</div>
       ${media.map((item,i)=>`<button type="button" data-thumb="${i}" aria-label="${esc((l==='ar'?'عرض صورة':l==='en'?'Show image':'Afficher l’image')+' '+(i+1))}">${responsive(item,`BF65INOXP ${i+1}`,'',false,'90px')}</button>`).join('')}</div>
       <div class="product-info">${breadcrumb(l,[{label:'BADAWI',url:p(l)},{label:t.nav[0],url:p(l,'products/')},{label:'BF65INOXP'}])}${eyebrow('BADAWI · BF65INOXP')}<h1>BF65INOXP</h1><h2>${esc(t.hero)}</h2><p>${esc(t.productLead)}</p>
-      <div class="live live-card" data-retailer-live><div><small>${esc(t.price)}</small><b data-price>—</b><span class="currency-hint">${esc(t.currencyHint)}</span></div><div><small>${esc(t.stock)}</small><b data-stock>—</b></div></div>
+      <div class="live live-card" data-retailer-live data-product-slug="bf65inoxp"><div><small>${esc(t.price)}</small><b data-price>—</b><span class="currency-hint">${esc(t.currencyHint)}</span></div><div><small>${esc(t.stock)}</small><b data-stock>—</b></div></div>
       <div class="actions vertical">${trackedBtn(RETAILER,t.retailer,'digitronics_click','Digitronics','primary','data-product="BF65INOXP" rel="noopener"')}${whatsappBtn(l,'product','dark','data-product="BF65INOXP" rel="noopener"')}</div></div>
     </div></section>
     ${trustStrip(l)}
@@ -224,7 +247,7 @@ function where(l){
     `<section class="page-hero warm"><div class="shell">${eyebrow(t.buy)}<h1>${esc(t.where)}</h1><p>${esc(t.whereText)}</p></div></section>
     <section class="section"><div class="shell retailer retailer-rich">
       <div><span class="eyebrow">${l==='ar'?'نقطة البيع الحالية':l==='en'?'CURRENT RETAILER':'POINT DE VENTE ACTUEL'}</span><h2>${esc(RETAILER_INFO.name)}</h2><p>${esc(RETAILER_INFO.address)}</p><a class="inline-link" href="${RETAILER_INFO.mapUrl}" rel="noopener">${l==='ar'?'فتح الموقع على الخريطة':l==='en'?'Open location on map':'Ouvrir l’emplacement sur la carte'}</a><div class="retailer-trust">${t.trust.map(item=>`<span>✓ ${esc(item)}</span>`).join('')}</div></div>
-      <div><div class="live live-card" data-retailer-live><div><small>${esc(t.price)}</small><b data-price>—</b><span class="currency-hint">${esc(t.currencyHint)}</span></div><div><small>${esc(t.stock)}</small><b data-stock>—</b></div></div><div class="actions vertical">${trackedBtn(RETAILER,t.retailer,'digitronics_click','Digitronics','dark','data-product="BF65INOXP" rel="noopener"')}${whatsappBtn(l,'product','ghost','data-product="BF65INOXP" rel="noopener"')}</div></div>
+      <div class="where-products">${PRODUCTS.map(product=>`<article><h3>${esc(product.model)}</h3><div class="live live-card" data-retailer-live data-product-slug="${esc(product.slug)}"><div><small>${esc(t.price)}</small><b data-price>—</b><span class="currency-hint">${esc(t.currencyHint)}</span></div><div><small>${esc(t.stock)}</small><b data-stock>—</b></div></div><div class="actions vertical">${trackedBtn(product.retailer.productUrl,t.retailer,'digitronics_click','Digitronics','dark',`data-product="${esc(product.model)}" rel="noopener"`)}${whatsappBtn(l,'product','ghost',`data-product="${esc(product.model)}" rel="noopener"`,product)}</div></article>`).join('')}</div>
     </div></section>`,4
   );
 }
@@ -250,11 +273,12 @@ function formPage(l,type,title,lead,fields,current=5){
 }
 function registration(l){
   const t=T[l],x=t.labels;
+  const productOptions=PRODUCTS.map(product=>[product.model,product.model]);
   const fields=field(x.firstName,'first_name','text','required autocomplete="given-name" maxlength="80"')+
     field(x.lastName,'last_name','text','required autocomplete="family-name" maxlength="80"')+
     field(x.phone,'phone','tel','required autocomplete="tel" inputmode="tel" maxlength="30"')+
     field(x.email,'email','email','autocomplete="email" maxlength="160"')+
-    field(x.model,'model','text','required value="BF65INOXP" readonly')+
+    select(x.model,'model',productOptions,'required')+
     field(x.serial,'serial_number','text','maxlength="100"')+
     field(x.purchaseDate,'purchase_date','date')+
     field(x.retailer,'retailer','text','value="Digitronics" maxlength="120"')+
@@ -265,10 +289,11 @@ function registration(l){
 }
 function request(l){
   const t=T[l],x=t.labels;
+  const productOptions=PRODUCTS.map(product=>[product.model,product.model]);
   const fields=field(x.name,'name','text','required autocomplete="name" maxlength="120"')+
     field(x.phone,'phone','tel','required autocomplete="tel" inputmode="tel" maxlength="30"')+
     field(x.email,'email','email','autocomplete="email" maxlength="160"')+
-    field(x.model,'model','text','required value="BF65INOXP" readonly')+
+    select(x.model,'model',productOptions,'required')+
     field(x.serial,'serial_number','text','maxlength="100"')+
     select(x.category,'category',[[ 'product',x.productInfo],['installation',x.installation],['order',x.order],['other',x.other]],'required')+
     textarea(x.description,'description')+
@@ -366,6 +391,61 @@ async function write(rel,data){
   await writeFile(file,data);
 }
 
+function standardProduct(l,product){
+  const t=T[l],copy=productCopy(l,product),media=product.media.product;
+  const path=`products/${product.slug}/`;
+  const propertyNames={
+    type:l==='ar'?'النوع':l==='en'?'Type':'Type',
+    burners:copy.factLabels[0],
+    finish:copy.factLabels[1],
+    dimensions:copy.factLabels[2]
+  };
+  const productSchema={
+    '@context':'https://schema.org','@type':'Product',
+    name:copy.name,model:product.model,brand:{'@type':'Brand',name:'BADAWI'},
+    description:copy.description,url:absolute(l,path),image:media.map(item=>item.src.startsWith('/')?`${ORIGIN}${item.src}`:item.src),
+    additionalProperty:Object.entries(product.verifiedFacts).map(([key,value])=>({
+      '@type':'PropertyValue',name:propertyNames[key]||key,value:value[l]
+    }))
+  };
+  const breadcrumbSchema={'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:[
+    {'@type':'ListItem',position:1,name:'BADAWI',item:absolute(l)},
+    {'@type':'ListItem',position:2,name:t.nav[0],item:absolute(l,'products/')},
+    {'@type':'ListItem',position:3,name:product.model,item:absolute(l,path)}
+  ]};
+  const details=copy.facts.map((fact,index)=>`<article><span>0${index+1}</span><h3>${esc(copy.factLabels[index])}</h3><p>${esc(fact)}</p></article>`).join('');
+  return page(l,copy.metaTitle,copy.metaDescription,path,
+    `<section class="product-hero"><div class="shell product-grid">
+      <div class="gallery single-product-image" data-gallery data-product="${esc(product.model)}"><div class="main">${responsive(media[0],copy.name,'gallery-current',true,'(max-width:900px) 100vw, 58vw')}</div></div>
+      <div class="product-info">${breadcrumb(l,[{label:'BADAWI',url:p(l)},{label:t.nav[0],url:p(l,'products/')},{label:product.model}])}${eyebrow(`BADAWI · ${product.model}`)}<h1>${esc(product.model)}</h1><h2>${esc(product.verifiedFacts.type[l])}</h2><p>${esc(copy.description)}</p>
+      <div class="live live-card" data-retailer-live data-product-slug="${esc(product.slug)}"><div><small>${esc(t.price)}</small><b data-price>—</b><span class="currency-hint">${esc(t.currencyHint)}</span></div><div><small>${esc(t.stock)}</small><b data-stock>—</b></div></div>
+      <p class="availability-note">${esc(copy.availability)}</p><div class="actions vertical">${trackedBtn(product.retailer.productUrl,t.retailer,'digitronics_click','Digitronics','primary',`data-product="${esc(product.model)}" rel="noopener"`)}${whatsappBtn(l,'product','dark',`data-product="${esc(product.model)}" rel="noopener"`,product)}</div></div>
+    </div></section>
+    ${trustStrip(l)}
+    <section class="section"><div class="shell">${eyebrow(t.verified)}<h2>${esc(t.details)}</h2><div class="details">${details}</div></div></section>
+    <section class="section dark"><div class="shell split"><div><h2>${esc(t.verified)}</h2><p class="lede light">${esc(copy.description)}</p></div><dl class="specs">${copy.facts.map((fact,index)=>`<div><dt>${esc(copy.factLabels[index])}</dt><dd>${esc(fact)}</dd></div>`).join('')}</dl></div></section>
+    <section class="section warm"><div class="shell split"><div><h2>${esc(t.supportTitle)}</h2><p class="lede">${esc(t.supportText)}</p></div><div class="actions vertical">${btn(p(l,'support/register/'),t.register,'dark')}${btn(p(l,'support/request/'),t.request,'ghost')}</div></div></section>
+    <div class="mobile-buy"><span>${esc(product.model)}</span><a href="${product.retailer.productUrl}" data-track="digitronics_click" data-destination="Digitronics" data-product="${esc(product.model)}" rel="noopener">${esc(t.buy)}</a></div>`,
+    0,JSON.stringify([productSchema,breadcrumbSchema]),media[0].src,copy.name
+  );
+}
+
+function productPage(l,product){
+  return product.slug==='bf65inoxp'?bf65inoxpProduct(l):standardProduct(l,product);
+}
+
+async function buildBf65cinoxAssets(){
+  const source=await readFile(BF65CINOX_SOURCE);
+  const digest=createHash('sha256').update(source).digest('hex').toUpperCase();
+  if(digest!=='8F6E7419DBFB0DBC89DDB7441CCD43B43423C5320FC7EBCD7DC5F7601C4ED92A') throw new Error(`BF65CINOX source checksum mismatch: ${digest}`);
+  const metadata=await sharp(source).metadata();
+  if(metadata.width!==1122||metadata.height!==1402) throw new Error(`BF65CINOX source dimensions changed: ${metadata.width}x${metadata.height}`);
+  for(const width of BF65CINOX_WIDTHS){
+    const image=await sharp(source).resize({width,withoutEnlargement:true}).webp({quality:82,effort:6}).toBuffer();
+    await write(`products/v1/bf65cinox/bf65cinox-${width}.webp`,image);
+  }
+}
+
 await rm(OUT,{recursive:true,force:true});
 await mkdir(OUT,{recursive:true});
 await write(`assets/${CSS_FILE}`,CSS);
@@ -373,6 +453,7 @@ await write(`assets/${JS_FILE}`,JS);
 // Keep stable aliases for older cached HTML while new pages use fingerprints.
 await write('assets/site.css',CSS);
 await write('assets/site.js',JS);
+await buildBf65cinoxAssets();
 for(const file of BRAND_FILES){
   const target=join(OUT,'brand','v1',file);
   await mkdir(dirname(target),{recursive:true});
@@ -385,7 +466,7 @@ await copyFile(join(BRAND_SOURCE,'apple-touch-icon.png'),join(OUT,'apple-touch-i
 const localizedRoutes=[
   '',
   'products/',
-  'products/bf65inoxp/',
+  ...PRODUCTS.map(product=>`products/${product.slug}/`),
   'inspiration/',
   'support/',
   'support/register/',
@@ -402,7 +483,7 @@ const localizedRoutes=[
 for(const l of LANGS){
   await write(`${l}/index.html`,home(l));
   await write(`${l}/products/index.html`,productsPage(l));
-  await write(`${l}/products/bf65inoxp/index.html`,product(l));
+  for(const product of PRODUCTS) await write(`${l}/products/${product.slug}/index.html`,productPage(l,product));
   await write(`${l}/inspiration/index.html`,inspiration(l));
   await write(`${l}/support/index.html`,support(l));
   await write(`${l}/support/register/index.html`,registration(l));
@@ -438,7 +519,7 @@ await write('manifest.webmanifest',JSON.stringify({
 const urls=LANGS.flatMap(l=>localizedRoutes.map(route=>absolute(l,route)));
 await write('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(url=>`  <url><loc>${url}</loc><lastmod>${BUILD_DATE}</lastmod></url>`).join('\n')}\n</urlset>\n`);
 await write('robots.txt',`User-agent: *\nAllow: /\nDisallow: /api/\nSitemap: ${ORIGIN}/sitemap.xml\n`);
-await write('llms.txt',`# BADAWI FOUR\n\nOfficial BADAWI FOUR website for BADAWI appliances: ${ORIGIN}\n\n## Current verified product\n- BF65INOXP: 65 cm gas oven, inox finish, two glazed front doors.\n- Installation is not included.\n- Verified physical data: 65 × 55 × 55 cm; net weight 12 kg. Exact gas connection, capacity and other unverified technical characteristics are intentionally not claimed until validated.\n\n## Languages\n- French: ${ORIGIN}/fr/\n- Arabic: ${ORIGIN}/ar/\n- English: ${ORIGIN}/en/\n\n## Support\n- Product registration and support are available under each language's /support/ section.\n- Current retailer: Digitronics.\n`);
+await write('llms.txt',`# BADAWI FOUR\n\nOfficial BADAWI FOUR website for BADAWI appliances: ${ORIGIN}\n\n## Current verified products\n- BF65INOXP: 65 cm gas oven, inox finish, two glazed front doors. Installation is not included. Verified physical data: 65 × 55 × 55 cm; net weight 12 kg.\n- BF65CINOX: four-burner gas cooker, inox finish. Verified physical data: 60 × 60 × 90 cm (width × depth × height).\n- Exact gas connections, capacities and other unverified technical characteristics are intentionally not claimed until validated.\n\n## Languages\n- French: ${ORIGIN}/fr/\n- Arabic: ${ORIGIN}/ar/\n- English: ${ORIGIN}/en/\n\n## Support\n- Product registration and support are available under each language's /support/ section.\n- Current retailer: Digitronics.\n`);
 await write('.well-known/security.txt',`Contact: ${ORIGIN}/en/contact/\nCanonical: ${ORIGIN}/.well-known/security.txt\nExpires: 2027-09-19T00:00:00Z\nPreferred-Languages: en, fr, ar\nPolicy: ${ORIGIN}/en/privacy/\n`);
 await write('_headers',`/*
   X-Frame-Options: DENY
@@ -452,6 +533,9 @@ await write('_headers',`/*
   Cache-Control: public, max-age=31536000, immutable
 
 /brand/v1/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/products/v1/*
   Cache-Control: public, max-age=31536000, immutable
 
 /favicon.svg
