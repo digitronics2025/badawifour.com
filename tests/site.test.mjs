@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, access } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { extractProduct, validateEmail, validatePhone } from '../src/worker.mjs';
+import worker, { extractProduct, validateEmail, validatePhone } from '../src/worker.mjs';
 import { GUIDES } from '../src/content.mjs';
 
 const root = fileURLToPath(new URL('../dist/', import.meta.url));
@@ -92,6 +92,18 @@ test('discovery, manifest and security artifacts exist', async () => {
   assert.equal(manifest.name,'BADAWI');
   const robots = await readFile(root + 'robots.txt','utf8');
   assert.match(robots,/Disallow: \/api\//);
+});
+
+test('worker canonicalizes HTTP and www in one redirect', async () => {
+  for (const input of [
+    'http://badawifour.com/ar/products/bf65inoxp/?source=test',
+    'http://www.badawifour.com/ar/products/bf65inoxp/?source=test',
+    'https://www.badawifour.com/ar/products/bf65inoxp/?source=test'
+  ]) {
+    const response = await worker.fetch(new Request(input),{});
+    assert.equal(response.status,301);
+    assert.equal(response.headers.get('location'),'https://badawifour.com/ar/products/bf65inoxp/?source=test');
+  }
 });
 
 test('generated pages reference fingerprinted assets', async () => {

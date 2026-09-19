@@ -308,7 +308,8 @@ async function cleanup(env){
 export default {
   async fetch(request,env){
     const url=new URL(request.url);
-    if(url.hostname.startsWith('www.')) return Response.redirect(`https://${url.hostname.slice(4)}${url.pathname}${url.search}`,301);
+    const canonicalHost=url.hostname.startsWith('www.')?url.hostname.slice(4):url.hostname;
+    if(url.protocol!=='https:'||canonicalHost!==url.hostname) return Response.redirect(`https://${canonicalHost}${url.pathname}${url.search}`,301);
     if(url.pathname==='/') return Response.redirect(`${url.origin}/fr/`,302);
 
     const aliases = new Map([
