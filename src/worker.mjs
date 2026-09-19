@@ -310,6 +310,17 @@ export default {
     const url=new URL(request.url);
     if(url.hostname.startsWith('www.')) return Response.redirect(`https://${url.hostname.slice(4)}${url.pathname}${url.search}`,301);
     if(url.pathname==='/') return Response.redirect(`${url.origin}/fr/`,302);
+
+    const aliases = new Map([
+      ['/fr/support/assistance/','/fr/support/request/'],
+      ['/en/support/assistance/','/en/support/request/'],
+      ['/ar/support/assistance/','/ar/support/request/'],
+      ['/fr/support/guides/nettoyage/','/fr/support/guides/clean-inox-glass/'],
+      ['/en/support/guides/cleaning/','/en/support/guides/clean-inox-glass/'],
+      ['/ar/support/guides/cleaning/','/ar/support/guides/clean-inox-glass/']
+    ]);
+    if(aliases.has(url.pathname)) return Response.redirect(`${url.origin}${aliases.get(url.pathname)}${url.search}`,301);
+
     if(url.pathname.startsWith('/api/')) return api(request,env,url);
     const response=await env.ASSETS.fetch(request);
     const headers=new Headers(response.headers);
