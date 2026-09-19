@@ -52,10 +52,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npx wrangler r2 bucket list --json > /tmp/r2.json
-          if ! node -e "const x=require('/tmp/r2.json'); const a=Array.isArray(x)?x:(x.result||x.buckets||[]); process.exit(a.some(v=>(v.name||v.bucket_name)==='badawifour-private-uploads')?0:1)"; then
+          if ! npx wrangler r2 bucket info badawifour-private-uploads --json > /tmp/r2.json 2>/tmp/r2-error.log; then
+            echo "R2 bucket does not exist yet; creating it."
             npx wrangler r2 bucket create badawifour-private-uploads
+            npx wrangler r2 bucket info badawifour-private-uploads --json > /tmp/r2.json
           fi
+          node -e "const x=require('/tmp/r2.json'); const n=x.name||x.bucket_name||x.result?.name||x.result?.bucket_name; if(n!=='badawifour-private-uploads') process.exit(1)"
 
       - name: Generate production Wrangler config
         shell: bash
