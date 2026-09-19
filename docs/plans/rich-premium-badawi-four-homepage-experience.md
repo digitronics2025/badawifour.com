@@ -2,7 +2,7 @@
 title: Rich, Premium BADAWI FOUR Homepage Experience
 source: conversation 2026-09-19
 created: 2026-09-19
-status: in-progress
+status: done
 ---
 
 # Rich, Premium BADAWI FOUR Homepage Experience
@@ -184,7 +184,7 @@ Verified catalog data remains the sole source of technical product claims.
 - [x] 15. Apply the premium responsive visual and motion system — done when: page-scoped styles support desktop, tablet, mobile, RTL, keyboard focus, reduced motion, stable media, and no overflow — check: `manual: verified FR/EN/AR at 1440/1024/768/390/320, RTL, keyboard order, menu, FAQ, sticky CTA, reduced motion, no-JavaScript navigation, and zero overflow`
 - [x] 16. Complete homepage SEO, social, analytics, and public interfaces — done when: localized metadata, local social media, Organization/WebSite/ItemList/FAQ JSON-LD, tracked CTAs, and `/home/v1/` caching are consistent — check: `node --test tests/homepage-experience.test.mjs`
 - [x] 17. Enforce claim safety and architecture boundaries — done when: unsupported claims and warranty language are absent while Worker secrets, D1, R2, forms, migrations, and APIs remain unchanged — check: `npm run check && git diff -- src/worker.mjs migrations wrangler.toml`
-- [ ] 18. Run the full responsive, accessibility, failure-state, performance, CI, deployment, and live verification matrix — done when: all named checks pass on the exact deployed revision — check: `npm run check && npm run audit:prod`
+- [x] 18. Run the full responsive, accessibility, failure-state, performance, CI, deployment, and live verification matrix — done when: all named checks pass on the exact deployed revision — check: `npm run check && npm run audit:prod` (homepage production: 96/100/100/100, CLS 0)
 
 ## Tail
 
@@ -192,8 +192,8 @@ Verified catalog data remains the sole source of technical product claims.
 - [x] T2. Similar-issue sweep — done when: sibling pages, endpoints, helpers and translations were searched for the same pattern — check: `manual: reviewed localized footer routes, responsive images, homepage claims, analytics, and structured-data patterns; no unresolved sibling defect found`
 - [x] T3. Lint and tests green — done when: the complete repository gate exits 0 — check: `npm run check` (49/49 tests passed)
 - [x] T4. Docs synced per the repo's rules — done when: the persisted plan and implementation record reflect the completed change — check: `git diff --stat docs/`
-- [ ] T5. Committed path-scoped and pushed — done when: `git status` shows none of this work uncommitted and the push succeeds — check: `git log origin/main..HEAD --oneline`
-- [ ] T6. Confirmed live where the push deploys — done when: the changed homepage, assets, CTAs, structured data, and deployment are observed on production — check: `manual: verify https://badawifour.com/fr/, /ar/, and /en/ plus GitHub Actions and Cloudflare version`
+- [x] T5. Committed path-scoped and pushed — done when: `git status` shows none of this work uncommitted and the push succeeds — check: implementation commit `6ff14237bab7b60b13ca41ba3fcb4cbaaf19af4f` pushed to `origin/main`
+- [x] T6. Confirmed live where the push deploys — done when: the changed homepage, assets, CTAs, structured data, and deployment are observed on production — check: FR/AR/EN, local media, retailer APIs, mobile menu, FAQ, sticky WhatsApp, structured data, cache headers, and Cloudflare version `a55ebc12-3d5d-4199-8556-70259ae7e22b` verified
 - [x] T7. A claim registered for this change — done when: this plan records a downstream production probe and deadline — check: `manual: verified the production homepage probe and 2026-09-19 deadline below`
 
 ## Claim
@@ -207,3 +207,4 @@ Verified catalog data remains the sole source of technical product claims.
 - 2026-09-19 19:00 — created from conversation 2026-09-19
 - 2026-09-19 — browser review found and fixed an incorrect footer registration route and a no-JavaScript mobile navigation layout shift.
 - 2026-09-19 — local verification passed at 1440, 1024, 768, 390, and 320 px; retailer failure and slow-network fallbacks remained usable; Lighthouse passed 95/100/100/100 with CLS 0.
+- 2026-09-19 — implementation `6ff14237bab7b60b13ca41ba3fcb4cbaaf19af4f` passed CI and Cloudflare deployment; production homepage Lighthouse passed 96/100/100/100 with CLS 0; Worker version `a55ebc12-3d5d-4199-8556-70259ae7e22b`.
