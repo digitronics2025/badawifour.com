@@ -178,7 +178,7 @@ test('pages use the official BADAWI FOUR identity assets and metadata', async ()
   assert.match(html, /rel="apple-touch-icon" href="\/apple-touch-icon\.png"/);
   assert.match(html, /property="og:site_name" content="BADAWI FOUR"/);
   assert.match(html, /\/brand\/v1\/badawi-four-lockup\.svg/);
-  assert.match(html, /\/brand\/v1\/badawi-four-flame\.svg/);
+  assert.doesNotMatch(html, /\/brand\/v1\/badawi-four-flame\.svg/);
   assert.match(html, /\/brand\/v1\/badawi-four-logo-reversed\.svg/);
   assert.doesNotMatch(html, /viewBox="0 0 32 40"/);
   const match = html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/);
@@ -194,15 +194,15 @@ test('localized brand links have stable dimensions and accessible names', async 
   for (const language of languages) {
     const html = await readFile(root + language + '/index.html','utf8');
     assert.match(html, new RegExp(`<a class="brand brand-header" href="/${language}/" aria-label="BADAWI FOUR">`));
-    assert.match(html, /<source media="\(max-width:620px\)" srcset="\/brand\/v1\/badawi-four-flame\.svg">/);
+    assert.doesNotMatch(html, /<source media=/);
     assert.match(html, /class="brand-lockup"[^>]+width="1030" height="220" alt=""/);
     assert.match(html, new RegExp(`<a class="brand brand-footer" href="/${language}/" aria-label="BADAWI FOUR">`));
     assert.match(html, /badawi-four-logo-reversed\.svg" width="1000" height="1000" alt=""/);
   }
   const css = await readFile(root + 'assets/site.css','utf8');
   assert.match(css, /\.brand-header\{width:164px;height:36px\}/);
-  assert.match(css, /\.brand-header picture\{display:block;width:164px;height:35px\}/);
-  assert.match(css, /\.brand-header picture,\.brand-header \.brand-lockup\{width:34px;height:34px\}/);
+  assert.match(css, /\.brand-header\{width:clamp\(120px,28vw,150px\);height:clamp\(26px,6vw,32px\)\}/);
+  assert.match(css, /\.brand-header \.brand-lockup\{width:100%;height:100%\}/);
 });
 
 test('BF65INOXP structured data retains BADAWI as the product brand', async () => {

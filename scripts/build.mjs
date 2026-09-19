@@ -54,7 +54,7 @@ const responsive=(media,alt,cls='',eager=false,sizes='100vw')=>{
 const img=(u,a,c='')=>responsive(u,a,c,false);
 const logo=(l,context='header')=>context==='footer'
   ? `<a class="brand brand-footer" href="${p(l)}" aria-label="BADAWI FOUR"><img src="/brand/v1/badawi-four-logo-reversed.svg" width="1000" height="1000" alt=""></a>`
-  : `<a class="brand brand-header" href="${p(l)}" aria-label="BADAWI FOUR"><picture><source media="(max-width:620px)" srcset="/brand/v1/badawi-four-flame.svg"><img class="brand-lockup" src="/brand/v1/badawi-four-lockup.svg" width="1030" height="220" alt=""></picture></a>`;
+  : `<a class="brand brand-header" href="${p(l)}" aria-label="BADAWI FOUR"><img class="brand-lockup" src="/brand/v1/badawi-four-lockup.svg" width="1030" height="220" alt=""></a>`;
 const langs=(l,path)=>`<div class="langs" aria-label="Language">${LANGS.map(x=>`<a href="${p(x,path)}" lang="${x}" ${l===x?'aria-current="page"':''}>${x==='ar'?'ع':x.toUpperCase()}</a>`).join('')}</div>`;
 function header(l,current='',path=''){
   const t=T[l],paths=['products/','inspiration/','support/','about/','where-to-buy/','professionals/'];
