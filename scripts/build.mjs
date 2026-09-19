@@ -50,7 +50,7 @@ function head(l,title,desc,path,image=PRODUCT[0],schema=''){
   const url=absolute(l,path),t=T[l];
   return `<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><meta name="robots" content="index,follow,max-image-preview:large"><link rel="canonical" href="${url}">${LANGS.map(x=>`<link rel="alternate" hreflang="${x}" href="${absolute(x,path)}">`).join('')}<link rel="alternate" hreflang="x-default" href="${absolute('fr',path)}"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><link rel="preconnect" href="https://digitronics.ma" crossorigin><meta name="theme-color" content="#171817"><meta property="og:type" content="website"><meta property="og:site_name" content="BADAWI"><meta property="og:locale" content="${esc(t.locale)}"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${url}"><meta property="og:image" content="${image}"><meta property="og:image:alt" content="BADAWI BF65INOXP"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${esc(title)}"><meta name="twitter:description" content="${esc(desc)}"><meta name="twitter:image" content="${image}"><link rel="stylesheet" href="/assets/site.css"><script type="module" src="/assets/site.js"></script>${schema?`<script type="application/ld+json">${schema}</script>`:''}`;
 }
-const page=(l,title,desc,path,body,current='',schema='')=>`<!doctype html><html lang="${l}" dir="${T[l].dir}"><head>${head(l,title,desc,path,PRODUCT[0],schema)}</head><body>${header(l,current,path)}<main id="main">${body}</main>${footer(l)}<a class="float" data-track="whatsapp_click" data-destination="whatsapp" aria-label="${esc(T[l].whatsapp)}" href="${wa(l,'general')}" rel="noopener">WA</a></body></html>`;
+const page=(l,title,desc,path,body,current='',schema='')=>`<!doctype html><html lang="${l}" dir="${T[l].dir}"><head>${head(l,title,desc,path,PRODUCT[0],schema)}</head><body>${header(l,current,path)}<main id="main">${body}</main>${footer(l)}<a class="float" data-track="whatsapp_click" data-destination="whatsapp" aria-label="${esc('WA — '+T[l].whatsapp)}" href="${wa(l,'general')}" rel="noopener">WA</a></body></html>`;
 
 
 const localized=(l,values)=>values[l]||values.en||values.fr;
@@ -403,7 +403,7 @@ await write('_headers',`/*
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
   Cross-Origin-Opener-Policy: same-origin
-  Content-Security-Policy: default-src 'self'; img-src 'self' https://digitronics.ma data:; media-src 'self' https://digitronics.ma; connect-src 'self'; style-src 'self'; script-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://wa.me https://digitronics.ma; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; img-src 'self' https://digitronics.ma data:; media-src 'self' https://digitronics.ma; connect-src 'self' https://cloudflareinsights.com; style-src 'self'; script-src 'self' https://static.cloudflareinsights.com; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://wa.me https://digitronics.ma; upgrade-insecure-requests
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
