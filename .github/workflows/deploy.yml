@@ -120,12 +120,12 @@ jobs:
             fi
 
             mapfile -t ids < <(node -e "const x=require('/tmp/dns.json'); const types=new Set(['A','AAAA','CNAME']); for(const r of (x.result||[])) if(types.has(r.type)) console.log(r.id)")
-            if [ "\${#ids[@]}" -eq 0 ]; then
+            if [ "${#ids[@]}" -eq 0 ]; then
               echo "No conflicting legacy web record found for $host."
               continue
             fi
 
-            for id in "\${ids[@]}"; do
+            for id in "${ids[@]}"; do
               echo "Removing legacy web DNS record $id for $host"
               del_code="$(curl --silent --show-error --output /tmp/dns-delete.json --write-out "%{http_code}" \
                 -X DELETE \
