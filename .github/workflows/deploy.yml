@@ -240,3 +240,7 @@ jobs:
           smoke_ref="$(node -e "const x=require('/tmp/contact-smoke.json'); if(!x.ok||!x.reference) process.exit(1); process.stdout.write(x.reference)")"
           npx wrangler d1 execute badawifour-prod --remote --command="DELETE FROM contact_messages WHERE id='$smoke_ref';" --config wrangler.deploy.json > /dev/null
           echo "Production contact form smoke test passed and cleaned up: $smoke_ref"
+
+      - name: Measure production Lighthouse quality
+        continue-on-error: true
+        run: npm run audit:prod
