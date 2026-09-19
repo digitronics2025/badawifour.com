@@ -74,17 +74,17 @@ export const GUIDES = [
     sections: {
       fr: [
         ['Faites intervenir un professionnel', 'Le raccordement d’un appareil à gaz doit respecter les règles locales et les caractéristiques exactes du produit. BADAWI ne publie pas de procédure de raccordement générique car le type de gaz, la ventilation et l’installation existante doivent être vérifiés sur place.'],
-        ['Confirmez les données techniques', 'Avant toute intervention, faites confirmer les mesures exactes, le type de raccordement et les exigences de ventilation à partir de la documentation fabricant ou par le service compétent.'],
+        ['Confirmez les données techniques', 'Le BF65INOXP mesure 65 × 55 × 55 cm et pèse 12 kg. Avant toute intervention, faites confirmer les dégagements nécessaires, le type de raccordement et les exigences de ventilation par un professionnel compétent.'],
         ['N’improvisez pas', 'N’utilisez pas d’adaptateur, injecteur, flexible ou modification non validés pour votre installation. En cas de doute, gardez l’appareil hors service jusqu’à la vérification par un professionnel.']
       ],
       en: [
         ['Use a qualified professional', 'A gas appliance must be connected in accordance with local rules and the exact product specification. BADAWI does not publish a generic connection procedure because gas type, ventilation and the existing installation must be checked on site.'],
-        ['Confirm technical data', 'Before work begins, confirm the exact measurements, connection type and ventilation requirements from manufacturer documentation or with the competent service professional.'],
+        ['Confirm technical data', 'BF65INOXP measures 65 × 55 × 55 cm and weighs 12 kg. Before work begins, have a competent professional confirm the required clearances, connection type and ventilation requirements.'],
         ['Do not improvise', 'Do not use unverified adapters, injectors, hoses or modifications for your installation. If in doubt, keep the appliance out of service until a professional has checked it.']
       ],
       ar: [
         ['استعن بفني مؤهل', 'يجب توصيل جهاز الغاز وفق القواعد المحلية والمواصفات الدقيقة للمنتج. لا تنشر BADAWI طريقة توصيل عامة لأن نوع الغاز والتهوية والتركيب القائم يجب فحصها في الموقع.'],
-        ['أكد البيانات التقنية', 'قبل بدء العمل، أكد المقاسات الدقيقة ونوع التوصيل ومتطلبات التهوية من وثائق المصنع أو عبر فني مختص.'],
+        ['أكد البيانات التقنية', 'مقاسات BF65INOXP هي 65 × 55 × 55 سم ووزنه 12 كغ. قبل بدء العمل اطلب من فني مختص تأكيد مسافات الأمان ونوع التوصيل ومتطلبات التهوية.'],
         ['لا ترتجل', 'لا تستخدم محولات أو فوهات أو خراطيم أو تعديلات غير معتمدة لتركيبك. عند الشك اترك الجهاز خارج الخدمة حتى يفحصه فني مختص.']
       ]
     }
