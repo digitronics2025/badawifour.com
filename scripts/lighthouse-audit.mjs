@@ -1,12 +1,18 @@
 import { spawnSync } from 'node:child_process';
 import { readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const url = process.env.LIGHTHOUSE_URL || 'https://badawifour.com/fr/products/bf65inoxp/';
-const output = '/tmp/badawifour-lighthouse.json';
+const output = join(tmpdir(), 'badawifour-lighthouse.json');
+const cli = fileURLToPath(new URL('../node_modules/lighthouse/cli/index.js', import.meta.url));
 
+await rm(output, { force: true });
 const result = spawnSync(
-  process.platform === 'win32' ? 'node_modules/.bin/lighthouse.cmd' : 'node_modules/.bin/lighthouse',
+  process.execPath,
   [
+    cli,
     url,
     '--quiet',
     '--chrome-flags=--headless --no-sandbox --disable-gpu',
@@ -17,9 +23,19 @@ const result = spawnSync(
   { stdio: 'inherit', env: { ...process.env, LIGHTHOUSE_CHROMIUM_PATH: process.env.LIGHTHOUSE_CHROMIUM_PATH || '' } }
 );
 
-if (result.status !== 0) process.exit(result.status || 1);
-
-const report = JSON.parse(await readFile(output, 'utf8'));
+if (result.error) {
+  console.error('Unable to start Lighthouse:', result.error.message);
+  process.exit(1);
+}
+let report;
+try {
+  report = JSON.parse(await readFile(output, 'utf8'));
+} catch {
+  process.exit(result.status || 1);
+}
+if (!report.categories) process.exit(result.status || 1);
+if (result.status !== 0 && process.platform !== 'win32') process.exit(result.status || 1);
+if (result.status !== 0) console.warn('Lighthouse completed with a launcher cleanup warning; using the valid report.');
 const categories = report.categories || {};
 const scores = Object.fromEntries(
   ['performance','accessibility','best-practices','seo'].map((key) => [key, Math.round((categories[key]?.score || 0) * 100)])

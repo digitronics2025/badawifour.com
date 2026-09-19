@@ -80,9 +80,21 @@ if(video){
   video.addEventListener('ended',()=>{if(!completed){completed=true;track('video_completed',{product:'BF65INOXP'})}});
 }
 
-$$('[data-api-form]').forEach((form)=>{
+function initializeForms(){
+  $$('[data-api-form]').forEach((form)=>{
+  if(form.dataset.initialized==='true')return;
+  form.dataset.initialized='true';
   const started=$('input[name="started_at"]',form);
-  if(started)started.value=String(Date.now());
+  const initializeTiming=()=>{
+    if(!started)return;
+    if(!Number(started.value))started.value=String(Date.now());
+    form.dataset.timingReady=String(Number(started.value)>0);
+  };
+  initializeTiming();
+  window.addEventListener('pageshow',initializeTiming,{once:true});
+  form.addEventListener('focusin',initializeTiming);
+  form.addEventListener('pointerdown',initializeTiming);
+  form.addEventListener('keydown',initializeTiming);
   form.addEventListener('submit',async(event)=>{
     event.preventDefault();
     if(!form.reportValidity())return;
@@ -108,7 +120,10 @@ $$('[data-api-form]').forEach((form)=>{
       if(button)button.disabled=false;
     }
   });
-});
+  });
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initializeForms,{once:true});
+else initializeForms();
 
 const live=$('[data-retailer-live]');
 if(live){

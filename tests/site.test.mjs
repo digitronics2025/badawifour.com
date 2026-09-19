@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, access } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { extractProduct, validateEmail, validatePhone } from '../src/worker.mjs';
 import { GUIDES } from '../src/content.mjs';
 
-const root = new URL('../dist/', import.meta.url).pathname;
+const root = fileURLToPath(new URL('../dist/', import.meta.url));
 const languages = ['fr','ar','en'];
 const routes = [
   '',
@@ -93,6 +94,16 @@ test('discovery, manifest and security artifacts exist', async () => {
   assert.match(robots,/Disallow: \/api\//);
 });
 
+test('generated pages reference fingerprinted assets', async () => {
+  const html = await readFile(root + 'fr/index.html','utf8');
+  const css = html.match(/href="\/assets\/(site\.[a-f0-9]{12}\.css)"/);
+  const js = html.match(/src="\/assets\/(site\.[a-f0-9]{12}\.js)"/);
+  assert.ok(css, 'fingerprinted CSS should be referenced');
+  assert.ok(js, 'fingerprinted JavaScript should be referenced');
+  await access(root + 'assets/' + css[1]);
+  await access(root + 'assets/' + js[1]);
+});
+
 test('privacy page discloses first-party measurement', async () => {
   const html = await readFile(root + 'en/privacy/index.html','utf8');
   assert.match(html,/Raw IP addresses are not stored/);
@@ -101,7 +112,9 @@ test('privacy page discloses first-party measurement', async () => {
 
 test('generated pages do not expose Cloudflare deployment credentials', async () => {
   const html = await readFile(root + 'fr/index.html','utf8');
-  const js = await readFile(root + 'assets/site.js','utf8');
+  const script = html.match(/src="\/assets\/(site\.[a-f0-9]{12}\.js)"/);
+  assert.ok(script, 'fingerprinted JavaScript should be referenced');
+  const js = await readFile(root + 'assets/' + script[1],'utf8');
   assert.doesNotMatch(html,/CLOUDFLARE_API_TOKEN/);
   assert.doesNotMatch(js,/CLOUDFLARE_API_TOKEN/);
 });

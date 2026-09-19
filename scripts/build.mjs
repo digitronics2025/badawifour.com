@@ -1,11 +1,13 @@
 import { mkdir, rm, writeFile, readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 
 import { T } from '../src/i18n.mjs';
 import { PRODUCTS, RETAILER as RETAILER_INFO } from '../src/catalog.mjs';
 import { GUIDES } from '../src/content.mjs';
 
-const OUT=new URL('../dist/',import.meta.url).pathname;
+const OUT=fileURLToPath(new URL('../dist/',import.meta.url));
 const ORIGIN='https://badawifour.com';
 const PRODUCT_DATA=PRODUCTS[0];
 const RETAILER=RETAILER_INFO.productUrl;
@@ -48,7 +50,7 @@ function footer(l){
 }
 function head(l,title,desc,path,image=PRODUCT[0],schema=''){
   const url=absolute(l,path),t=T[l];
-  return `<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><meta name="robots" content="index,follow,max-image-preview:large"><link rel="canonical" href="${url}">${LANGS.map(x=>`<link rel="alternate" hreflang="${x}" href="${absolute(x,path)}">`).join('')}<link rel="alternate" hreflang="x-default" href="${absolute('fr',path)}"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><link rel="preconnect" href="https://digitronics.ma" crossorigin><meta name="theme-color" content="#171817"><meta property="og:type" content="website"><meta property="og:site_name" content="BADAWI"><meta property="og:locale" content="${esc(t.locale)}"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${url}"><meta property="og:image" content="${image}"><meta property="og:image:alt" content="BADAWI BF65INOXP"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${esc(title)}"><meta name="twitter:description" content="${esc(desc)}"><meta name="twitter:image" content="${image}"><link rel="stylesheet" href="/assets/site.css"><script type="module" src="/assets/site.js"></script>${schema?`<script type="application/ld+json">${schema}</script>`:''}`;
+  return `<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><meta name="robots" content="index,follow,max-image-preview:large"><link rel="canonical" href="${url}">${LANGS.map(x=>`<link rel="alternate" hreflang="${x}" href="${absolute(x,path)}">`).join('')}<link rel="alternate" hreflang="x-default" href="${absolute('fr',path)}"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><link rel="preconnect" href="https://digitronics.ma" crossorigin><meta name="theme-color" content="#171817"><meta property="og:type" content="website"><meta property="og:site_name" content="BADAWI"><meta property="og:locale" content="${esc(t.locale)}"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${url}"><meta property="og:image" content="${image}"><meta property="og:image:alt" content="BADAWI BF65INOXP"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${esc(title)}"><meta name="twitter:description" content="${esc(desc)}"><meta name="twitter:image" content="${image}"><link rel="stylesheet" href="/assets/${CSS_FILE}"><script type="module" src="/assets/${JS_FILE}"></script>${schema?`<script type="application/ld+json">${schema}</script>`:''}`;
 }
 const page=(l,title,desc,path,body,current='',schema='')=>`<!doctype html><html lang="${l}" dir="${T[l].dir}"><head>${head(l,title,desc,path,PRODUCT[0],schema)}</head><body>${header(l,current,path)}<main id="main">${body}</main>${footer(l)}<a class="float" data-track="whatsapp_click" data-destination="whatsapp" aria-label="${esc('WA — '+T[l].whatsapp)}" href="${wa(l,'general')}" rel="noopener">WA</a></body></html>`;
 
@@ -330,6 +332,8 @@ function guidePage(l,guide){
 
 const CSS=await readFile(new URL('../src/site.css',import.meta.url),'utf8');
 const JS=await readFile(new URL('../src/site.js',import.meta.url),'utf8');
+const CSS_FILE=`site.${createHash('sha256').update(CSS).digest('hex').slice(0,12)}.css`;
+const JS_FILE=`site.${createHash('sha256').update(JS).digest('hex').slice(0,12)}.js`;
 
 async function write(rel,data){
   const file=join(OUT,rel);
@@ -339,6 +343,9 @@ async function write(rel,data){
 
 await rm(OUT,{recursive:true,force:true});
 await mkdir(OUT,{recursive:true});
+await write(`assets/${CSS_FILE}`,CSS);
+await write(`assets/${JS_FILE}`,JS);
+// Keep stable aliases for older cached HTML while new pages use fingerprints.
 await write('assets/site.css',CSS);
 await write('assets/site.js',JS);
 

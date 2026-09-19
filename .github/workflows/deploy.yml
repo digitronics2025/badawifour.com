@@ -50,7 +50,7 @@ jobs:
           fi
 
       - name: Install deployment tooling
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Build and test
         run: npm run check
@@ -232,14 +232,90 @@ jobs:
           curl --silent --show-error --head --max-time 20 https://badawifour.com/en/support/guides/cleaning/ > /tmp/alias-cleaning.txt
           grep -qi '^location: https://badawifour.com/en/support/guides/clean-inox-glass/' /tmp/alias-cleaning.txt
 
-          # Exercise one real production form endpoint, then immediately remove
-          # the synthetic row so smoke tests never pollute business data.
-          started_at="$(node -p 'Date.now()-2500')"
-          curl --fail --silent --show-error --max-time 20             -H 'Origin: https://badawifour.com'             -H 'Referer: https://badawifour.com/en/contact/'             -H 'Accept: application/json'             -F 'locale=en'             -F 'website='             -F "started_at=$started_at"             -F 'name=BADAWI Deployment Smoke Test'             -F 'email=smoke@badawifour.invalid'             -F 'subject=Production form smoke test'             -F 'message=Automated production verification. Safe to delete.'             -F 'privacy_consent=1'             https://badawifour.com/api/contact > /tmp/contact-smoke.json
+          # Exercise every production form plus both private upload paths. The
+          # generated D1 rows and R2 objects are removed before this step passes.
+          registration_ref=''
+          support_ref=''
+          professional_ref=''
+          contact_ref=''
 
-          smoke_ref="$(node -e "const x=require('/tmp/contact-smoke.json'); if(!x.ok||!x.reference) process.exit(1); process.stdout.write(x.reference)")"
-          npx wrangler d1 execute badawifour-prod --remote --command="DELETE FROM contact_messages WHERE id='$smoke_ref';" --config wrangler.deploy.json > /dev/null
-          echo "Production contact form smoke test passed and cleaned up: $smoke_ref"
+          cleanup_smoke_data() {
+            set +e
+            cleanup_failed=0
+            if [ -n "$registration_ref" ] || [ -n "$support_ref" ]; then
+              npx wrangler d1 execute badawifour-prod --remote --json \
+                --command="SELECT receipt_key AS object_key FROM registrations WHERE id='$registration_ref' UNION ALL SELECT attachment_key AS object_key FROM support_requests WHERE id='$support_ref';" \
+                --config wrangler.deploy.json > /tmp/smoke-uploads.json || cleanup_failed=1
+              node -e "const x=require('/tmp/smoke-uploads.json'); for(const batch of x) for(const row of (batch.results||[])) if(row.object_key) console.log(row.object_key)" > /tmp/smoke-upload-keys.txt || cleanup_failed=1
+              while IFS= read -r key; do
+                [ -n "$key" ] && npx wrangler r2 object delete "badawifour-private-uploads/$key" --remote --force --config wrangler.deploy.json || cleanup_failed=1
+              done < /tmp/smoke-upload-keys.txt
+            fi
+            npx wrangler d1 execute badawifour-prod --remote \
+              --command="DELETE FROM registrations WHERE id='$registration_ref'; DELETE FROM support_requests WHERE id='$support_ref'; DELETE FROM professional_leads WHERE id='$professional_ref'; DELETE FROM contact_messages WHERE id='$contact_ref';" \
+              --config wrangler.deploy.json > /dev/null || cleanup_failed=1
+            set -e
+            return "$cleanup_failed"
+          }
+          trap 'cleanup_smoke_data || true' EXIT
+
+          printf '%s' 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' | base64 --decode > /tmp/badawi-smoke.png
+          started_at="$(node -p 'Date.now()-2500')"
+
+          curl --fail --silent --show-error --max-time 20 \
+            -H 'Origin: https://badawifour.com' \
+            -H 'Referer: https://badawifour.com/en/support/register/' \
+            -H 'Accept: application/json' \
+            -F 'locale=en' -F 'website=' -F "started_at=$started_at" \
+            -F 'first_name=BADAWI' -F 'last_name=Deployment Smoke Test' \
+            -F 'phone=+212600000000' -F 'email=smoke@badawifour.invalid' \
+            -F 'model=BF65INOXP' -F 'serial_number=SMOKE-TEST' \
+            -F 'retailer=Automated production verification' \
+            -F 'privacy_consent=1' -F 'receipt=@/tmp/badawi-smoke.png;type=image/png' \
+            https://badawifour.com/api/registration > /tmp/registration-smoke.json
+          registration_ref="$(node -e "const x=require('/tmp/registration-smoke.json'); if(!x.ok||!x.reference) process.exit(1); process.stdout.write(x.reference)")"
+
+          curl --fail --silent --show-error --max-time 20 \
+            -H 'Origin: https://badawifour.com' \
+            -H 'Referer: https://badawifour.com/en/support/request/' \
+            -H 'Accept: application/json' \
+            -F 'locale=en' -F 'website=' -F "started_at=$started_at" \
+            -F 'name=BADAWI Deployment Smoke Test' -F 'phone=+212600000000' \
+            -F 'email=smoke@badawifour.invalid' -F 'model=BF65INOXP' \
+            -F 'serial_number=SMOKE-TEST' -F 'category=product' \
+            -F 'description=Automated production verification. Safe to delete.' \
+            -F 'privacy_consent=1' -F 'attachment=@/tmp/badawi-smoke.png;type=image/png' \
+            https://badawifour.com/api/support > /tmp/support-smoke.json
+          support_ref="$(node -e "const x=require('/tmp/support-smoke.json'); if(!x.ok||!x.reference) process.exit(1); process.stdout.write(x.reference)")"
+
+          curl --fail --silent --show-error --max-time 20 \
+            -H 'Origin: https://badawifour.com' \
+            -H 'Referer: https://badawifour.com/en/professionals/' \
+            -H 'Accept: application/json' \
+            -F 'locale=en' -F 'website=' -F "started_at=$started_at" \
+            -F 'company=BADAWI Deployment Smoke Test' -F 'contact_name=Automation' \
+            -F 'country=Morocco' -F 'phone=+212600000000' \
+            -F 'email=smoke@badawifour.invalid' -F 'business_type=retailer' \
+            -F 'message=Automated production verification. Safe to delete.' \
+            -F 'privacy_consent=1' \
+            https://badawifour.com/api/professionals > /tmp/professionals-smoke.json
+          professional_ref="$(node -e "const x=require('/tmp/professionals-smoke.json'); if(!x.ok||!x.reference) process.exit(1); process.stdout.write(x.reference)")"
+
+          curl --fail --silent --show-error --max-time 20 \
+            -H 'Origin: https://badawifour.com' \
+            -H 'Referer: https://badawifour.com/en/contact/' \
+            -H 'Accept: application/json' \
+            -F 'locale=en' -F 'website=' -F "started_at=$started_at" \
+            -F 'name=BADAWI Deployment Smoke Test' -F 'email=smoke@badawifour.invalid' \
+            -F 'subject=Production form smoke test' \
+            -F 'message=Automated production verification. Safe to delete.' \
+            -F 'privacy_consent=1' \
+            https://badawifour.com/api/contact > /tmp/contact-smoke.json
+          contact_ref="$(node -e "const x=require('/tmp/contact-smoke.json'); if(!x.ok||!x.reference) process.exit(1); process.stdout.write(x.reference)")"
+
+          cleanup_smoke_data
+          trap - EXIT
+          echo "Production registration, support, professional and contact flows passed; D1 rows and R2 objects were cleaned up."
 
       - name: Measure production Lighthouse quality
         continue-on-error: true
