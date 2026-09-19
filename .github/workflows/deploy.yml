@@ -317,6 +317,8 @@ jobs:
           trap - EXIT
           echo "Production registration, support, professional and contact flows passed; D1 rows and R2 objects were cleaned up."
 
-      - name: Measure production Lighthouse quality
-        continue-on-error: true
+      - name: Enforce production Lighthouse quality
+        env:
+          LIGHTHOUSE_STRICT: "1"
+          LIGHTHOUSE_RUNS: "3"
         run: npm run audit:prod
