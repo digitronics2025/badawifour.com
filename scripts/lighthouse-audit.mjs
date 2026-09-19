@@ -35,6 +35,28 @@ const metrics = {
 
 console.log('BADAWI Lighthouse:', JSON.stringify({ url, scores, metrics }));
 
+const diagnosticCategories = ['accessibility','best-practices','seo'];
+const diagnosticRows = [];
+for (const categoryKey of diagnosticCategories) {
+  const refs = categories[categoryKey]?.auditRefs || [];
+  for (const ref of refs) {
+    const audit = audits[ref.id];
+    if (!audit) continue;
+    if (audit.scoreDisplayMode === 'notApplicable' || audit.scoreDisplayMode === 'manual' || audit.scoreDisplayMode === 'informative') continue;
+    if (audit.score === 1) continue;
+    diagnosticRows.push({
+      category: categoryKey,
+      id: ref.id,
+      score: audit.score,
+      title: audit.title,
+      displayValue: audit.displayValue || ''
+    });
+  }
+}
+if (diagnosticRows.length) {
+  console.log('BADAWI Lighthouse diagnostics:', JSON.stringify(diagnosticRows));
+}
+
 const strict = process.env.LIGHTHOUSE_STRICT === '1';
 if (strict) {
   const thresholds = { performance: 80, accessibility: 95, 'best-practices': 95, seo: 95 };
