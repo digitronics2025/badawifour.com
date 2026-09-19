@@ -75,6 +75,71 @@ jobs:
           fi
           node -e "const x=require('/tmp/r2.json'); const n=x.name||x.bucket_name||x.result?.name||x.result?.bucket_name; if(n!=='badawifour-private-uploads') process.exit(1)"
 
+      - name: Prepare BADAWI custom domains
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          curl_cf() {
+            curl --silent --show-error \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              -H "Content-Type: application/json" \
+              "$@"
+          }
+
+          # Read any Worker custom domains already attached. This prevents us from
+          # deleting Cloudflare-managed DNS records on subsequent deployments.
+          curl_cf "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" > /tmp/worker-domains.json
+          node -e "const x=require('/tmp/worker-domains.json'); if(x.success===false){console.error(x.errors);process.exit(1)}"
+
+          for host in badawifour.com www.badawifour.com; do
+            attached="$(HOST="$host" node -e "const x=require('/tmp/worker-domains.json'); const a=x.result||[]; process.stdout.write(a.some(v=>v.hostname===process.env.HOST&&v.service==='badawifour-com')?'yes':'no')")"
+            if [ "$attached" = "yes" ]; then
+              echo "$host is already attached to badawifour-com; keeping Worker-managed DNS."
+              continue
+            fi
+
+            # Cloudflare Custom Domains cannot take over a hostname while an
+            # external A/AAAA/CNAME record exists. Remove only legacy web-origin
+            # records for the two hostnames we are replacing. MX/TXT/CAA and all
+            # other DNS records are deliberately preserved.
+            encoded_host="$(HOST="$host" node -p "encodeURIComponent(process.env.HOST)")"
+            http_code="$(curl --silent --show-error --output /tmp/dns.json --write-out "%{http_code}" \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              -H "Content-Type: application/json" \
+              "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/dns_records?name=$encoded_host&per_page=100")"
+
+            if [ "$http_code" = "403" ]; then
+              echo "::error::Cloudflare API token needs Zone > DNS > Edit for badawifour.com so the legacy web records can be replaced safely."
+              exit 4
+            fi
+            if [ "$http_code" -ge 400 ]; then
+              cat /tmp/dns.json
+              echo "::error::Unable to inspect DNS for $host (HTTP $http_code)."
+              exit 4
+            fi
+
+            mapfile -t ids < <(node -e "const x=require('/tmp/dns.json'); const types=new Set(['A','AAAA','CNAME']); for(const r of (x.result||[])) if(types.has(r.type)) console.log(r.id)")
+            if [ "\${#ids[@]}" -eq 0 ]; then
+              echo "No conflicting legacy web record found for $host."
+              continue
+            fi
+
+            for id in "\${ids[@]}"; do
+              echo "Removing legacy web DNS record $id for $host"
+              del_code="$(curl --silent --show-error --output /tmp/dns-delete.json --write-out "%{http_code}" \
+                -X DELETE \
+                -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+                -H "Content-Type: application/json" \
+                "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/dns_records/$id")"
+              if [ "$del_code" -ge 400 ]; then
+                cat /tmp/dns-delete.json
+                echo "::error::Unable to remove legacy web DNS record for $host (HTTP $del_code)."
+                exit 4
+              fi
+            done
+          done
+
       - name: Generate production Wrangler config
         shell: bash
         run: |
