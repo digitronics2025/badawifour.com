@@ -320,19 +320,88 @@ function guidePage(l,guide){
 const CSS=await readFile(new URL('../src/site.css',import.meta.url),'utf8');
 const JS=await readFile(new URL('../src/site.js',import.meta.url),'utf8');
 
-async function write(rel,data){const file=join(OUT,rel);await mkdir(dirname(file),{recursive:true});await writeFile(file,data)}
-await rm(OUT,{recursive:true,force:true});await mkdir(OUT,{recursive:true});await write('assets/site.css',CSS);await write('assets/site.js',JS);
-for(const l of ['fr','ar','en']){await write(`${l}/index.html`,home(l));await write(`${l}/products/bf65inoxp/index.html`,product(l));await write(`${l}/inspiration/index.html`,inspiration(l));await write(`${l}/support/index.html`,support(l));await write(`${l}/support/register/index.html`,registration(l));await write(`${l}/support/request/index.html`,request(l));await write(`${l}/about/index.html`,about(l));await write(`${l}/where-to-buy/index.html`,where(l));await write(`${l}/professionals/index.html`,pros(l));await write(`${l}/contact/index.html`,contact(l));await write(`${l}/privacy/index.html`,simple(l,'privacy'));await write(`${l}/legal/index.html`,simple(l,'legal'))}
-await write('index.html','<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=/fr/"><a href="/fr/">BADAWI</a>');
-await write('404.html','<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="/assets/site.css"><section class="page-hero dark"><div class="shell"><h1>404</h1><p>Page not found.</p><a class="btn primary" href="/fr/">BADAWI</a></div></section>');
-const urls=[];for(const l of ['fr','ar','en'])for(const x of ['','products/bf65inoxp/','inspiration/','support/','support/register/','support/request/','about/','where-to-buy/','professionals/','contact/','privacy/','legal/'])urls.push(ORIGIN+p(l,x));
-await write('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map(u=>`<url><loc>${u}</loc></url>`).join('')}</urlset>`);await write('robots.txt',`User-agent: *\nAllow: /\nSitemap: ${ORIGIN}/sitemap.xml\n`);await write('_headers',`/*
+async function write(rel,data){
+  const file=join(OUT,rel);
+  await mkdir(dirname(file),{recursive:true});
+  await writeFile(file,data);
+}
+
+await rm(OUT,{recursive:true,force:true});
+await mkdir(OUT,{recursive:true});
+await write('assets/site.css',CSS);
+await write('assets/site.js',JS);
+
+const localizedRoutes=[
+  '',
+  'products/',
+  'products/bf65inoxp/',
+  'inspiration/',
+  'support/',
+  'support/register/',
+  'support/request/',
+  ...GUIDES.map(guide=>\`support/guides/\${guide.slug}/\`),
+  'about/',
+  'where-to-buy/',
+  'professionals/',
+  'contact/',
+  'privacy/',
+  'legal/'
+];
+
+for(const l of LANGS){
+  await write(\`\${l}/index.html\`,home(l));
+  await write(\`\${l}/products/index.html\`,productsPage(l));
+  await write(\`\${l}/products/bf65inoxp/index.html\`,product(l));
+  await write(\`\${l}/inspiration/index.html\`,inspiration(l));
+  await write(\`\${l}/support/index.html\`,support(l));
+  await write(\`\${l}/support/register/index.html\`,registration(l));
+  await write(\`\${l}/support/request/index.html\`,request(l));
+  for(const guide of GUIDES) await write(\`\${l}/support/guides/\${guide.slug}/index.html\`,guidePage(l,guide));
+  await write(\`\${l}/about/index.html\`,about(l));
+  await write(\`\${l}/where-to-buy/index.html\`,where(l));
+  await write(\`\${l}/professionals/index.html\`,pros(l));
+  await write(\`\${l}/contact/index.html\`,contact(l));
+  await write(\`\${l}/privacy/index.html\`,simple(l,'privacy'));
+  await write(\`\${l}/legal/index.html\`,simple(l,'legal'));
+}
+
+await write('index.html','<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="robots" content="noindex"><meta http-equiv="refresh" content="0;url=/fr/"><link rel="canonical" href="https://badawifour.com/fr/"><title>BADAWI</title></head><body><a href="/fr/">BADAWI</a></body></html>');
+await write('404.html','<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="stylesheet" href="/assets/site.css"><title>404 — BADAWI</title></head><body><main id="main"><section class="page-hero dark"><div class="shell"><p class="eyebrow">BADAWI</p><h1>404</h1><p>Page introuvable · Page not found · الصفحة غير موجودة</p><a class="btn primary" href="/fr/">BADAWI <span aria-hidden="true">↗</span></a></div></section></main></body></html>');
+
+await write('favicon.svg',\`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#171817"/><path d="M34 5c4 15-8 20 2 31 2-10 10-13 12-22 12 14 15 29 8 40-5 8-13 12-24 12C16 66 5 55 5 40 5 24 19 16 34 5Z" fill="#c63c31"/><path d="M32 32c5 7 6 12 3 18-2 4-6 6-11 6-7 0-12-5-12-12 0-8 7-13 13-19-2 7 0 11 5 14 0-3 1-5 2-7Z" fill="#fff" opacity=".9"/></svg>\`);
+await write('manifest.webmanifest',JSON.stringify({
+  name:'BADAWI',
+  short_name:'BADAWI',
+  description:'BADAWI — La cuisine qui rassemble.',
+  start_url:'/fr/',
+  scope:'/',
+  display:'standalone',
+  background_color:'#fffdfa',
+  theme_color:'#171817',
+  icons:[{src:'/favicon.svg',sizes:'any',type:'image/svg+xml',purpose:'any'}]
+},null,2));
+
+const urls=LANGS.flatMap(l=>localizedRoutes.map(route=>absolute(l,route)));
+await write('sitemap.xml',\`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n\${urls.map(url=>\`  <url><loc>\${url}</loc><lastmod>\${BUILD_DATE}</lastmod></url>\`).join('\n')}\n</urlset>\n\`);
+await write('robots.txt',\`User-agent: *\nAllow: /\nDisallow: /api/\nSitemap: \${ORIGIN}/sitemap.xml\n\`);
+await write('llms.txt',\`# BADAWI\n\nOfficial BADAWI appliance brand website: \${ORIGIN}\n\n## Current verified product\n- BF65INOXP: 65 cm gas oven, inox finish, two glazed front doors.\n- Manufacturer warranty: 1 year.\n- Installation is not included.\n- Exact dimensions, capacity, gas connection and unverified technical characteristics are intentionally not claimed on this site until manufacturer documentation is validated.\n\n## Languages\n- French: \${ORIGIN}/fr/\n- Arabic: \${ORIGIN}/ar/\n- English: \${ORIGIN}/en/\n\n## Support\n- Product registration and support are available under each language's /support/ section.\n- Current retailer: Digitronics.\n\`);
+await write('.well-known/security.txt',\`Contact: \${ORIGIN}/en/contact/\nCanonical: \${ORIGIN}/.well-known/security.txt\nExpires: 2027-09-19T00:00:00Z\nPreferred-Languages: en, fr, ar\nPolicy: \${ORIGIN}/en/privacy/\n\`);
+await write('_headers',\`/*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
-  Content-Security-Policy: default-src 'self'; img-src 'self' https://digitronics.ma data:; media-src 'self' https://digitronics.ma; connect-src 'self'; style-src 'self'; script-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests
+  Cross-Origin-Opener-Policy: same-origin
+  Content-Security-Policy: default-src 'self'; img-src 'self' https://digitronics.ma data:; media-src 'self' https://digitronics.ma; connect-src 'self'; style-src 'self'; script-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://wa.me https://digitronics.ma; upgrade-insecure-requests
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
-`);console.log(`Built ${urls.length} localized pages`);
+
+/favicon.svg
+  Cache-Control: public, max-age=86400
+
+/manifest.webmanifest
+  Cache-Control: public, max-age=3600
+\`);
+
+console.log(\`Built \${urls.length} localized pages with \${GUIDES.length} guides\`);
