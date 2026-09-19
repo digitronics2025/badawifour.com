@@ -90,3 +90,19 @@ nav a[aria-current=page]{font-weight:800}
 .required-mark{color:var(--red);font-weight:900}
 
 .warm .lede{color:#575852}
+
+/* Official BADAWI FOUR identity */
+.brand{display:inline-flex;align-items:center;flex:0 0 auto;direction:ltr}
+.brand img{display:block;max-width:none}
+.brand-header{width:164px;height:36px}
+.brand-header picture{display:block;width:164px;height:35px}
+.brand-lockup{width:164px;height:35px}
+.brand-footer{width:190px;align-items:flex-start}
+.brand-footer img{width:190px;height:190px}
+@media(max-width:620px){
+  .nav{gap:14px}
+  .brand-header{width:34px;height:34px}
+  .brand-header picture,.brand-header .brand-lockup{width:34px;height:34px}
+  .brand-footer{width:160px}
+  .brand-footer img{width:160px;height:160px}
+}

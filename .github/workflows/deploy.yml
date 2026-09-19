@@ -201,9 +201,31 @@ jobs:
             return 1
           }
 
-          for path in /fr/ /ar/ /en/ /fr/products/ /fr/products/bf65inoxp/ /fr/support/guides/before-installation/ /sitemap.xml /manifest.webmanifest /.well-known/security.txt; do
+          for path in /fr/ /ar/ /en/ /fr/products/ /fr/products/bf65inoxp/ /fr/support/guides/before-installation/ /sitemap.xml /manifest.webmanifest /favicon.svg /favicon.ico /apple-touch-icon.png /brand/v1/badawi-four-logo.svg /brand/v1/badawi-four-logo-reversed.svg /brand/v1/badawi-four-lockup.svg /brand/v1/android-chrome-192x192.png /brand/v1/android-chrome-512x512.png /brand/v1/maskable-icon-512x512-dark-bg.png /.well-known/security.txt; do
             check_url "https://badawifour.com$path"
           done
+
+          check_asset_headers() {
+            local path="$1"
+            local expected_type="$2"
+            local expected_cache="$3"
+            curl --fail --silent --show-error --head --max-time 20 "https://badawifour.com$path" > /tmp/asset-headers.txt
+            grep -Eqi "^content-type: ${expected_type}" /tmp/asset-headers.txt
+            grep -Eqi "^cache-control: ${expected_cache}" /tmp/asset-headers.txt
+          }
+
+          check_asset_headers /favicon.svg 'image/svg\+xml' 'public, max-age=86400'
+          check_asset_headers /favicon.ico 'image/(x-icon|vnd\.microsoft\.icon)' 'public, max-age=86400'
+          check_asset_headers /apple-touch-icon.png 'image/png' 'public, max-age=86400'
+          check_asset_headers /brand/v1/badawi-four-logo.svg 'image/svg\+xml' 'public, max-age=31536000, immutable'
+          check_asset_headers /brand/v1/android-chrome-192x192.png 'image/png' 'public, max-age=31536000, immutable'
+
+          curl --fail --silent --show-error --max-time 20 https://badawifour.com/manifest.webmanifest > /tmp/manifest.json
+          node -e "const x=require('/tmp/manifest.json'); if(x.name!=='BADAWI FOUR'||!x.icons?.some(v=>v.purpose==='maskable')) process.exit(1)"
+
+          curl --fail --silent --show-error --max-time 20 https://badawifour.com/fr/ > /tmp/home.html
+          grep -q '/brand/v1/badawi-four-lockup.svg' /tmp/home.html
+          grep -q 'https://badawifour.com/brand/v1/badawi-four-logo.svg' /tmp/home.html
 
           retailer_ok=0
           for i in {1..6}; do

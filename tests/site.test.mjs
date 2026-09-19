@@ -94,13 +94,60 @@ test('sitemap includes catalog and guides in every language', async () => {
 });
 
 test('discovery, manifest and security artifacts exist', async () => {
-  for (const file of ['favicon.svg','manifest.webmanifest','llms.txt','.well-known/security.txt','robots.txt']) {
+  for (const file of ['favicon.svg','favicon.ico','apple-touch-icon.png','manifest.webmanifest','llms.txt','.well-known/security.txt','robots.txt']) {
     await access(root + file);
   }
   const manifest = JSON.parse(await readFile(root + 'manifest.webmanifest','utf8'));
-  assert.equal(manifest.name,'BADAWI');
+  assert.equal(manifest.name,'BADAWI FOUR');
+  assert.deepEqual(manifest.icons.map(({sizes,purpose})=>[sizes,purpose]),[
+    ['192x192','any'],
+    ['512x512','any'],
+    ['512x512','maskable']
+  ]);
+  for (const icon of manifest.icons) await access(root + icon.src.slice(1));
   const robots = await readFile(root + 'robots.txt','utf8');
   assert.match(robots,/Disallow: \/api\//);
+});
+
+test('pages use the official BADAWI FOUR identity assets and metadata', async () => {
+  const html = await readFile(root + 'fr/index.html','utf8');
+  assert.match(html, /href="\/favicon\.ico" sizes="any"/);
+  assert.match(html, /href="\/favicon\.svg" type="image\/svg\+xml"/);
+  assert.match(html, /rel="apple-touch-icon" href="\/apple-touch-icon\.png"/);
+  assert.match(html, /property="og:site_name" content="BADAWI FOUR"/);
+  assert.match(html, /\/brand\/v1\/badawi-four-lockup\.svg/);
+  assert.match(html, /\/brand\/v1\/badawi-four-flame\.svg/);
+  assert.match(html, /\/brand\/v1\/badawi-four-logo-reversed\.svg/);
+  assert.doesNotMatch(html, /viewBox="0 0 32 40"/);
+  const match = html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/);
+  const organization = JSON.parse(match[1]);
+  assert.equal(organization.name,'BADAWI FOUR');
+  assert.equal(organization.logo,'https://badawifour.com/brand/v1/badawi-four-logo.svg');
+  assert.match(await readFile(root + 'index.html','utf8'), /<title>BADAWI FOUR<\/title>/);
+  assert.match(await readFile(root + '404.html','utf8'), /<title>404 — BADAWI FOUR<\/title>/);
+  assert.match(await readFile(root + 'llms.txt','utf8'), /^# BADAWI FOUR$/m);
+});
+
+test('localized brand links have stable dimensions and accessible names', async () => {
+  for (const language of languages) {
+    const html = await readFile(root + language + '/index.html','utf8');
+    assert.match(html, new RegExp(`<a class="brand brand-header" href="/${language}/" aria-label="BADAWI FOUR">`));
+    assert.match(html, /<source media="\(max-width:620px\)" srcset="\/brand\/v1\/badawi-four-flame\.svg">/);
+    assert.match(html, /class="brand-lockup"[^>]+width="1030" height="220" alt=""/);
+    assert.match(html, new RegExp(`<a class="brand brand-footer" href="/${language}/" aria-label="BADAWI FOUR">`));
+    assert.match(html, /badawi-four-logo-reversed\.svg" width="1000" height="1000" alt=""/);
+  }
+  const css = await readFile(root + 'assets/site.css','utf8');
+  assert.match(css, /\.brand-header\{width:164px;height:36px\}/);
+  assert.match(css, /\.brand-header picture\{display:block;width:164px;height:35px\}/);
+  assert.match(css, /\.brand-header picture,\.brand-header \.brand-lockup\{width:34px;height:34px\}/);
+});
+
+test('BF65INOXP structured data retains BADAWI as the product brand', async () => {
+  const html = await readFile(root + 'en/products/bf65inoxp/index.html','utf8');
+  const match = html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/);
+  const data = JSON.parse(match[1]);
+  assert.equal(data[0].brand.name,'BADAWI');
 });
 
 test('worker canonicalizes HTTP and www in one redirect', async () => {

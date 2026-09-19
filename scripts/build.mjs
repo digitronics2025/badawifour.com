@@ -1,4 +1,4 @@
-import { mkdir, rm, writeFile, readFile } from 'node:fs/promises';
+import { mkdir, rm, writeFile, readFile, copyFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
@@ -8,6 +8,7 @@ import { PRODUCTS, RETAILER as RETAILER_INFO } from '../src/catalog.mjs';
 import { GUIDES } from '../src/content.mjs';
 
 const OUT=fileURLToPath(new URL('../dist/',import.meta.url));
+const BRAND_SOURCE=fileURLToPath(new URL('../src/brand/v1/',import.meta.url));
 const ORIGIN='https://badawifour.com';
 const PRODUCT_DATA=PRODUCTS[0];
 const RETAILER=RETAILER_INFO.productUrl;
@@ -17,6 +18,18 @@ const FOOD=PRODUCT_DATA.media.food;
 const VIDEO=PRODUCT_DATA.media.video;
 const LANGS=['fr','ar','en'];
 const BUILD_DATE=new Date().toISOString().slice(0,10);
+const BRAND_FILES=[
+  'badawi-four-logo.svg',
+  'badawi-four-logo-reversed.svg',
+  'badawi-four-flame.svg',
+  'badawi-four-lockup.svg',
+  'favicon.svg',
+  'favicon.ico',
+  'apple-touch-icon.png',
+  'android-chrome-192x192.png',
+  'android-chrome-512x512.png',
+  'maskable-icon-512x512-dark-bg.png'
+];
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const p=(l,x='')=>`/${l}/${x}`.replace(/\/{2,}/g,'/').replace(/(?<!\/)$/,'/');
@@ -37,7 +50,9 @@ const responsive=(media,alt,cls='',eager=false,sizes='100vw')=>{
   return `<img${cls?` class="${cls}"`:''} src="${src}"${srcset?` srcset="${srcset}" sizes="${sizes}"`:''} alt="${esc(alt)}" loading="${eager?'eager':'lazy'}" decoding="async"${eager?' fetchpriority="high"':''} referrerpolicy="no-referrer">`;
 };
 const img=(u,a,c='')=>responsive(u,a,c,false);
-const logo=l=>`<a class="brand" href="${p(l)}" aria-label="BADAWI"><svg viewBox="0 0 32 40" aria-hidden="true"><path d="M17 1c2 8-4 10 1 16 1-5 5-7 6-11 7 8 9 17 5 25-3 6-8 9-14 9C7 40 1 34 1 26 1 17 8 12 17 1Z" fill="currentColor"/><path d="M16 20c3 4 4 7 2 11-1 2-3 4-6 4-4 0-7-3-7-7 0-5 4-8 8-12-1 4 0 6 3 8 0-2 0-3 0-4Z" fill="#fff" opacity=".85"/></svg><span>BADAWI</span></a>`;
+const logo=(l,context='header')=>context==='footer'
+  ? `<a class="brand brand-footer" href="${p(l)}" aria-label="BADAWI FOUR"><img src="/brand/v1/badawi-four-logo-reversed.svg" width="1000" height="1000" alt=""></a>`
+  : `<a class="brand brand-header" href="${p(l)}" aria-label="BADAWI FOUR"><picture><source media="(max-width:620px)" srcset="/brand/v1/badawi-four-flame.svg"><img class="brand-lockup" src="/brand/v1/badawi-four-lockup.svg" width="1030" height="220" alt=""></picture></a>`;
 const langs=(l,path)=>`<div class="langs" aria-label="Language">${LANGS.map(x=>`<a href="${p(x,path)}" lang="${x}" ${l===x?'aria-current="page"':''}>${x==='ar'?'ع':x.toUpperCase()}</a>`).join('')}</div>`;
 function header(l,current='',path=''){
   const t=T[l],paths=['products/','inspiration/','support/','about/','where-to-buy/','professionals/'];
@@ -46,11 +61,11 @@ function header(l,current='',path=''){
 }
 function footer(l){
   const t=T[l];
-  return `<footer><div class="shell foot"><div>${logo(l)}<p>${esc(t.hero)}</p></div><div><a href="${p(l,'products/')}">${esc(t.nav[0])}</a><a href="${p(l,'products/bf65inoxp/')}">BF65INOXP</a><a href="${p(l,'support/')}">${esc(t.nav[2])}</a><a href="${p(l,'contact/')}">${l==='ar'?'اتصل بنا':'Contact'}</a></div><div><a href="${p(l,'privacy/')}">${esc(t.privacy)}</a><a href="${p(l,'legal/')}">${esc(t.legal)}</a><a href="${p(l,'professionals/')}">${esc(t.nav[5])}</a></div></div><div class="shell copy">© 2026 BADAWI · Casablanca, Morocco</div></footer>`;
+  return `<footer><div class="shell foot"><div>${logo(l,'footer')}<p>${esc(t.hero)}</p></div><div><a href="${p(l,'products/')}">${esc(t.nav[0])}</a><a href="${p(l,'products/bf65inoxp/')}">BF65INOXP</a><a href="${p(l,'support/')}">${esc(t.nav[2])}</a><a href="${p(l,'contact/')}">${l==='ar'?'اتصل بنا':'Contact'}</a></div><div><a href="${p(l,'privacy/')}">${esc(t.privacy)}</a><a href="${p(l,'legal/')}">${esc(t.legal)}</a><a href="${p(l,'professionals/')}">${esc(t.nav[5])}</a></div></div><div class="shell copy">© 2026 BADAWI FOUR · Casablanca, Morocco</div></footer>`;
 }
 function head(l,title,desc,path,image=PRODUCT[0],schema=''){
   const url=absolute(l,path),t=T[l];
-  return `<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><meta name="robots" content="index,follow,max-image-preview:large"><link rel="canonical" href="${url}">${LANGS.map(x=>`<link rel="alternate" hreflang="${x}" href="${absolute(x,path)}">`).join('')}<link rel="alternate" hreflang="x-default" href="${absolute('fr',path)}"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><link rel="preconnect" href="https://digitronics.ma" crossorigin><meta name="theme-color" content="#171817"><meta property="og:type" content="website"><meta property="og:site_name" content="BADAWI"><meta property="og:locale" content="${esc(t.locale)}"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${url}"><meta property="og:image" content="${image}"><meta property="og:image:alt" content="BADAWI BF65INOXP"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${esc(title)}"><meta name="twitter:description" content="${esc(desc)}"><meta name="twitter:image" content="${image}"><link rel="stylesheet" href="/assets/${CSS_FILE}"><script type="module" src="/assets/${JS_FILE}"></script>${schema?`<script type="application/ld+json">${schema}</script>`:''}`;
+  return `<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><meta name="robots" content="index,follow,max-image-preview:large"><link rel="canonical" href="${url}">${LANGS.map(x=>`<link rel="alternate" hreflang="${x}" href="${absolute(x,path)}">`).join('')}<link rel="alternate" hreflang="x-default" href="${absolute('fr',path)}"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><link rel="preconnect" href="https://digitronics.ma" crossorigin><meta name="theme-color" content="#171817"><meta property="og:type" content="website"><meta property="og:site_name" content="BADAWI FOUR"><meta property="og:locale" content="${esc(t.locale)}"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${url}"><meta property="og:image" content="${image}"><meta property="og:image:alt" content="BADAWI BF65INOXP"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${esc(title)}"><meta name="twitter:description" content="${esc(desc)}"><meta name="twitter:image" content="${image}"><link rel="stylesheet" href="/assets/${CSS_FILE}"><script type="module" src="/assets/${JS_FILE}"></script>${schema?`<script type="application/ld+json">${schema}</script>`:''}`;
 }
 function imagePreload(path){
   const media=path===''?FOOD[2]:path==='products/bf65inoxp/'?PRODUCT_DATA.media.product[0]:path==='about/'?FOOD[0]:null;
@@ -82,8 +97,8 @@ function breadcrumb(l,items){
 function home(l){
   const t=T[l];
   const organization={
-    '@context':'https://schema.org','@type':'Organization',name:'BADAWI',url:ORIGIN,
-    logo:`${ORIGIN}/favicon.svg`,contactPoint:{'@type':'ContactPoint',telephone:RETAILER_INFO.phoneDisplay,contactType:'customer support'}
+    '@context':'https://schema.org','@type':'Organization',name:'BADAWI FOUR',url:ORIGIN,
+    logo:`${ORIGIN}/brand/v1/badawi-four-logo.svg`,contactPoint:{'@type':'ContactPoint',telephone:RETAILER_INFO.phoneDisplay,contactType:'customer support'}
   };
   return page(l,`BADAWI — ${t.hero}`,t.intro,'',
     `<section class="hero"><div class="hero-bg">${responsive(FOOD[2],t.hero,'',true)}</div><div class="shade"></div><div class="shell hero-copy">${eyebrow('BADAWI')}<h1>${esc(t.hero)}</h1><p>${esc(t.intro)}</p><div class="actions">${trackedBtn(p(l,'products/bf65inoxp/'),t.discover,'product_discovery','BF65INOXP','primary','data-product="BF65INOXP"')}${trackedBtn(p(l,'where-to-buy/'),t.buy,'where_to_buy_opened','where-to-buy','ghost')}</div></div></section>
@@ -332,7 +347,7 @@ function simple(l,key){
 
 function guidePage(l,guide){
   const t=T[l];
-  const schema=JSON.stringify({'@context':'https://schema.org','@type':'Article',headline:guide.title[l],description:guide.description[l],inLanguage:l,author:{'@type':'Organization',name:'BADAWI'},publisher:{'@type':'Organization',name:'BADAWI'},dateModified:BUILD_DATE,mainEntityOfPage:absolute(l,`support/guides/${guide.slug}/`)});
+  const schema=JSON.stringify({'@context':'https://schema.org','@type':'Article',headline:guide.title[l],description:guide.description[l],inLanguage:l,author:{'@type':'Organization',name:'BADAWI FOUR'},publisher:{'@type':'Organization',name:'BADAWI FOUR'},dateModified:BUILD_DATE,mainEntityOfPage:absolute(l,`support/guides/${guide.slug}/`)});
   return page(l,`${guide.title[l]} — BADAWI`,guide.description[l],`support/guides/${guide.slug}/`,
     `<article class="article-page"><section class="page-hero warm"><div class="shell">${breadcrumb(l,[{label:'BADAWI',url:p(l)},{label:t.nav[2],url:p(l,'support/')},{label:guide.title[l]}])}${eyebrow(t.guideTitle)}<h1>${esc(guide.title[l])}</h1><p>${esc(guide.description[l])}</p></div></section><section class="section"><div class="shell prose article-body">${guide.sections[l].map(([h,b],index)=>`<section><span class="eyebrow">0${index+1}</span><h2>${esc(h)}</h2><p>${esc(b)}</p></section>`).join('')}<div class="article-cta">${btn(p(l,'support/'),t.backToSupport,'dark')}${btn(p(l,'support/request/'),t.request,'ghost')}</div></div></section></article>`,2,schema
   );
@@ -356,6 +371,14 @@ await write(`assets/${JS_FILE}`,JS);
 // Keep stable aliases for older cached HTML while new pages use fingerprints.
 await write('assets/site.css',CSS);
 await write('assets/site.js',JS);
+for(const file of BRAND_FILES){
+  const target=join(OUT,'brand','v1',file);
+  await mkdir(dirname(target),{recursive:true});
+  await copyFile(join(BRAND_SOURCE,file),target);
+}
+await copyFile(join(BRAND_SOURCE,'favicon.svg'),join(OUT,'favicon.svg'));
+await copyFile(join(BRAND_SOURCE,'favicon.ico'),join(OUT,'favicon.ico'));
+await copyFile(join(BRAND_SOURCE,'apple-touch-icon.png'),join(OUT,'apple-touch-icon.png'));
 
 const localizedRoutes=[
   '',
@@ -391,26 +414,29 @@ for(const l of LANGS){
   await write(`${l}/legal/index.html`,simple(l,'legal'));
 }
 
-await write('index.html','<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="robots" content="noindex"><meta http-equiv="refresh" content="0;url=/fr/"><link rel="canonical" href="https://badawifour.com/fr/"><title>BADAWI</title></head><body><a href="/fr/">BADAWI</a></body></html>');
-await write('404.html','<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="stylesheet" href="/assets/site.css"><title>404 — BADAWI</title></head><body><main id="main"><section class="page-hero dark"><div class="shell"><p class="eyebrow">BADAWI</p><h1>404</h1><p>Page introuvable · Page not found · الصفحة غير موجودة</p><a class="btn primary" href="/fr/">BADAWI <span aria-hidden="true">↗</span></a></div></section></main></body></html>');
+await write('index.html','<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="robots" content="noindex"><meta http-equiv="refresh" content="0;url=/fr/"><link rel="canonical" href="https://badawifour.com/fr/"><title>BADAWI FOUR</title></head><body><a href="/fr/">BADAWI FOUR</a></body></html>');
+await write('404.html','<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="stylesheet" href="/assets/site.css"><title>404 — BADAWI FOUR</title></head><body><main id="main"><section class="page-hero dark"><div class="shell"><p class="eyebrow">BADAWI FOUR</p><h1>404</h1><p>Page introuvable · Page not found · الصفحة غير موجودة</p><a class="btn primary" href="/fr/">BADAWI FOUR <span aria-hidden="true">↗</span></a></div></section></main></body></html>');
 
-await write('favicon.svg',`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#171817"/><path d="M34 5c4 15-8 20 2 31 2-10 10-13 12-22 12 14 15 29 8 40-5 8-13 12-24 12C16 66 5 55 5 40 5 24 19 16 34 5Z" fill="#c63c31"/><path d="M32 32c5 7 6 12 3 18-2 4-6 6-11 6-7 0-12-5-12-12 0-8 7-13 13-19-2 7 0 11 5 14 0-3 1-5 2-7Z" fill="#fff" opacity=".9"/></svg>`);
 await write('manifest.webmanifest',JSON.stringify({
-  name:'BADAWI',
-  short_name:'BADAWI',
+  name:'BADAWI FOUR',
+  short_name:'BADAWI FOUR',
   description:'BADAWI — La cuisine qui rassemble.',
   start_url:'/fr/',
   scope:'/',
   display:'standalone',
   background_color:'#fffdfa',
   theme_color:'#171817',
-  icons:[{src:'/favicon.svg',sizes:'any',type:'image/svg+xml',purpose:'any'}]
+  icons:[
+    {src:'/brand/v1/android-chrome-192x192.png',sizes:'192x192',type:'image/png',purpose:'any'},
+    {src:'/brand/v1/android-chrome-512x512.png',sizes:'512x512',type:'image/png',purpose:'any'},
+    {src:'/brand/v1/maskable-icon-512x512-dark-bg.png',sizes:'512x512',type:'image/png',purpose:'maskable'}
+  ]
 },null,2));
 
 const urls=LANGS.flatMap(l=>localizedRoutes.map(route=>absolute(l,route)));
 await write('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(url=>`  <url><loc>${url}</loc><lastmod>${BUILD_DATE}</lastmod></url>`).join('\n')}\n</urlset>\n`);
 await write('robots.txt',`User-agent: *\nAllow: /\nDisallow: /api/\nSitemap: ${ORIGIN}/sitemap.xml\n`);
-await write('llms.txt',`# BADAWI\n\nOfficial BADAWI appliance brand website: ${ORIGIN}\n\n## Current verified product\n- BF65INOXP: 65 cm gas oven, inox finish, two glazed front doors.\n- Manufacturer warranty: 1 year.\n- Installation is not included.\n- Verified physical data: 65 × 55 × 55 cm; net weight 12 kg. Exact gas connection, capacity and other unverified technical characteristics are intentionally not claimed until validated.\n\n## Languages\n- French: ${ORIGIN}/fr/\n- Arabic: ${ORIGIN}/ar/\n- English: ${ORIGIN}/en/\n\n## Support\n- Product registration and support are available under each language's /support/ section.\n- Current retailer: Digitronics.\n`);
+await write('llms.txt',`# BADAWI FOUR\n\nOfficial BADAWI FOUR website for BADAWI appliances: ${ORIGIN}\n\n## Current verified product\n- BF65INOXP: 65 cm gas oven, inox finish, two glazed front doors.\n- Manufacturer warranty: 1 year.\n- Installation is not included.\n- Verified physical data: 65 × 55 × 55 cm; net weight 12 kg. Exact gas connection, capacity and other unverified technical characteristics are intentionally not claimed until validated.\n\n## Languages\n- French: ${ORIGIN}/fr/\n- Arabic: ${ORIGIN}/ar/\n- English: ${ORIGIN}/en/\n\n## Support\n- Product registration and support are available under each language's /support/ section.\n- Current retailer: Digitronics.\n`);
 await write('.well-known/security.txt',`Contact: ${ORIGIN}/en/contact/\nCanonical: ${ORIGIN}/.well-known/security.txt\nExpires: 2027-09-19T00:00:00Z\nPreferred-Languages: en, fr, ar\nPolicy: ${ORIGIN}/en/privacy/\n`);
 await write('_headers',`/*
   X-Frame-Options: DENY
@@ -423,7 +449,16 @@ await write('_headers',`/*
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
+/brand/v1/*
+  Cache-Control: public, max-age=31536000, immutable
+
 /favicon.svg
+  Cache-Control: public, max-age=86400
+
+/favicon.ico
+  Cache-Control: public, max-age=86400
+
+/apple-touch-icon.png
   Cache-Control: public, max-age=86400
 
 /manifest.webmanifest
