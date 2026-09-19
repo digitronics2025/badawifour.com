@@ -151,6 +151,15 @@ test('mobile navigation starts with a localized homepage link', async () => {
   }
 });
 
+test('product cards keep media and calls to action aligned across image shapes', async () => {
+  const css = await readFile(projectRoot + 'src/site.css','utf8');
+  assert.match(css,/\.catalog-card\{display:grid;grid-template-rows:auto 1fr;/);
+  assert.match(css,/\.catalog-card>a:first-child\{[^}]*aspect-ratio:4\/3;[^}]*min-height:0;[^}]*overflow:hidden/);
+  assert.match(css,/\.catalog-card>a:first-child img\{[^}]*min-height:0;[^}]*object-fit:contain/);
+  assert.match(css,/\.catalog-card>div\{display:flex;flex-direction:column;align-items:flex-start;/);
+  assert.match(css,/\.catalog-card \.btn\{margin-top:auto\}/);
+});
+
 test('removed service-coverage claims stay absent from source and generated pages', async () => {
   const removedTerms = [
     new RegExp(['warr','ant(?:y|ies)'].join(''),'iu'),
