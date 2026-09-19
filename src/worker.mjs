@@ -151,9 +151,9 @@ async function api(request,env,url){
 export default {
   async fetch(request,env){
     const url=new URL(request.url);
-    if(url.pathname.startsWith('/api/')) return api(request,env,url);
-    if(url.pathname==='/') return Response.redirect(`${url.origin}/fr/`,302);
     if(url.hostname.startsWith('www.')) return Response.redirect(`https://${url.hostname.slice(4)}${url.pathname}${url.search}`,301);
+    if(url.pathname==='/') return Response.redirect(`${url.origin}/fr/`,302);
+    if(url.pathname.startsWith('/api/')) return api(request,env,url);
     const response=await env.ASSETS.fetch(request);
     const headers=new Headers(response.headers);
     for(const [k,v] of Object.entries(securityHeaders)) headers.set(k,v);
