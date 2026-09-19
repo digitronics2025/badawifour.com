@@ -78,6 +78,14 @@ test('mobile navigation becomes visible when the menu is expanded', async () => 
   assert.match(css,/@media\(max-width:900px\)\{[\s\S]*?#mobile:not\(\[hidden\]\)\{display:block\}/);
 });
 
+test('mobile navigation starts with a localized homepage link', async () => {
+  const labels = {fr:'Accueil',ar:'الرئيسية',en:'Home'};
+  for (const language of languages) {
+    const html = await readFile(root + language + '/index.html','utf8');
+    assert.match(html,new RegExp(`<div id="mobile" hidden><a aria-current="page" href="/${language}/">${labels[language]}</a>`));
+  }
+});
+
 test('removed service-coverage claims stay absent from source and generated pages', async () => {
   const removedTerms = [
     new RegExp(['warr','ant(?:y|ies)'].join(''),'iu'),

@@ -59,7 +59,9 @@ const langs=(l,path)=>`<div class="langs" aria-label="Language">${LANGS.map(x=>`
 function header(l,current='',path=''){
   const t=T[l],paths=['products/','inspiration/','support/','about/','where-to-buy/','professionals/'];
   const skip=l==='ar'?'انتقل إلى المحتوى':l==='en'?'Skip to content':'Aller au contenu';
-  return `<header><a class="skip" href="#main">${skip}</a><div class="shell nav">${logo(l)}<nav aria-label="Main navigation">${t.nav.map((n,i)=>`<a ${current===i?'aria-current="page"':''} href="${p(l,paths[i])}">${esc(n)}</a>`).join('')}</nav>${langs(l,path)}<button class="menu" type="button" aria-expanded="false" aria-controls="mobile">${esc(t.menu)}</button></div><div id="mobile" hidden>${t.nav.map((n,i)=>`<a href="${p(l,paths[i])}">${esc(n)}</a>`).join('')}</div></header>`;
+  const mobileHome=`<a ${path===''?'aria-current="page"':''} href="${p(l)}">${esc(t.home)}</a>`;
+  const mobileNav=t.nav.map((n,i)=>`<a ${current===i?'aria-current="page"':''} href="${p(l,paths[i])}">${esc(n)}</a>`).join('');
+  return `<header><a class="skip" href="#main">${skip}</a><div class="shell nav">${logo(l)}<nav aria-label="Main navigation">${t.nav.map((n,i)=>`<a ${current===i?'aria-current="page"':''} href="${p(l,paths[i])}">${esc(n)}</a>`).join('')}</nav>${langs(l,path)}<button class="menu" type="button" aria-expanded="false" aria-controls="mobile">${esc(t.menu)}</button></div><div id="mobile" hidden>${mobileHome}${mobileNav}</div></header>`;
 }
 function footer(l){
   const t=T[l];
