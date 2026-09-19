@@ -24,7 +24,6 @@ export const PRODUCTS = [{
   category: 'gas-oven',
   widthLabel: '65 cm',
   finish: 'Inox',
-  warrantyMonths: 12,
   installationIncluded: false,
   physical: {
     widthCm: 65,

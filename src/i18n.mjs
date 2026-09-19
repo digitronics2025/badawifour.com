@@ -13,7 +13,7 @@ export const T = {
     emotion: 'Les bons moments commencent avant de passer à table.',
     emotionText: 'Le feu, les gestes, les parfums et le plaisir de préparer ensemble. BADAWI place la cuisine au centre des moments que l’on partage.',
     supportTitle: 'Une marque doit rester utile après la vente.',
-    supportText: 'Garantie, enregistrement produit, assistance et conseils : tout est rassemblé dans un même espace.',
+    supportText: 'Enregistrement produit, assistance et conseils : tout est rassemblé dans un même espace.',
     productTitle: 'BADAWI BF65INOXP — Four à gaz 65 cm inox',
     productLead: 'Four à gaz 65 cm en finition inox, avec deux portes vitrées.',
     verified: 'Caractéristiques vérifiées',
@@ -43,7 +43,7 @@ export const T = {
     guideTitle: 'Conseils & guides',
     readGuide: 'Lire le guide',
     backToSupport: 'Retour à l’assistance',
-    trust: ['Garantie constructeur 1 an', 'Paiement à la livraison via Digitronics', 'Livraison au Maroc à confirmer avec le vendeur'],
+    trust: ['Informations produit vérifiées', 'Paiement à la livraison via Digitronics', 'Livraison au Maroc à confirmer avec le vendeur'],
     productFacts: {
       finishTitle: 'Finition inox',
       finishText: 'Une silhouette sobre qui s’intègre facilement dans la cuisine.',
@@ -53,8 +53,6 @@ export const T = {
       controlsText: 'Les commandes sont regroupées sur le côté droit de la façade.'
     },
     supportCards: {
-      warrantyTitle: 'Garantie',
-      warrantyText: 'Le BF65INOXP est présenté avec une garantie constructeur de 1 an. Les conditions applicables sont confirmées au moment de l’achat.',
       documentsTitle: 'Données techniques',
       documentsText: 'Nous publions uniquement les informations vérifiées. Pour les mesures exactes et le raccordement, contactez le service compétent avant installation.',
       guidesTitle: 'Conseils pratiques',
@@ -63,8 +61,7 @@ export const T = {
     faq: [
       ['Comment commander ?', 'Utilisez le bouton « Acheter chez Digitronics » ou WhatsApp. Le vendeur confirme le prix, le stock, la livraison et le montant total.'],
       ['Puis-je payer à la livraison ?', 'Oui, Digitronics indique le paiement à la livraison pour ce produit. Les conditions finales sont confirmées lors de la commande.'],
-      ['L’installation est-elle incluse ?', 'Non. L’installation n’est pas incluse. Faites confirmer le raccordement et les mesures exactes par un professionnel compétent.'],
-      ['Quelle est la garantie ?', 'Le produit est présenté avec une garantie constructeur de 1 an. Conservez votre preuve d’achat et enregistrez le produit pour faciliter l’assistance.']
+      ['L’installation est-elle incluse ?', 'Non. L’installation n’est pas incluse. Faites confirmer le raccordement et les mesures exactes par un professionnel compétent.']
     ],
     labels: {
       firstName: 'Prénom', lastName: 'Nom', name: 'Nom complet', phone: 'Téléphone', email: 'E-mail',
@@ -74,7 +71,7 @@ export const T = {
       company: 'Entreprise', contactName: 'Nom du contact', country: 'Pays', businessType: 'Type d’activité',
       message: 'Message', subject: 'Objet', privacyConsent: 'J’accepte que mes données soient utilisées pour traiter cette demande.',
       marketingConsent: 'Je souhaite recevoir occasionnellement des informations BADAWI.',
-      choose: 'Choisir', productInfo: 'Information produit', warranty: 'Garantie', installation: 'Installation',
+      choose: 'Choisir', productInfo: 'Information produit', installation: 'Installation',
       order: 'Commande / livraison', other: 'Autre', distributor: 'Distributeur', retailerBusiness: 'Revendeur',
       hospitality: 'Hôtellerie / restauration', industrial: 'Partenaire industriel', project: 'Projet / immobilier'
     },
@@ -97,7 +94,7 @@ export const T = {
     emotion: 'The best moments begin before the meal is served.',
     emotionText: 'Heat, movement, aroma and the pleasure of preparing something together. BADAWI puts cooking at the center of shared moments.',
     supportTitle: 'A brand should remain useful after the sale.',
-    supportText: 'Warranty, product registration, support and practical guidance are brought together in one place.',
+    supportText: 'Product registration, support and practical guidance are brought together in one place.',
     productTitle: 'BADAWI BF65INOXP — 65 cm stainless-steel gas oven',
     productLead: '65 cm gas oven in stainless-steel finish with two glazed doors.',
     verified: 'Verified specifications',
@@ -127,7 +124,7 @@ export const T = {
     guideTitle: 'Advice & guides',
     readGuide: 'Read guide',
     backToSupport: 'Back to support',
-    trust: ['1-year manufacturer warranty', 'Cash on delivery via Digitronics', 'Morocco delivery confirmed with the retailer'],
+    trust: ['Verified product information', 'Cash on delivery via Digitronics', 'Morocco delivery confirmed with the retailer'],
     productFacts: {
       finishTitle: 'Stainless-steel finish',
       finishText: 'A restrained finish designed to sit comfortably in the kitchen.',
@@ -137,8 +134,6 @@ export const T = {
       controlsText: 'Controls are grouped on the right side of the front panel.'
     },
     supportCards: {
-      warrantyTitle: 'Warranty',
-      warrantyText: 'BF65INOXP is presented with a 1-year manufacturer warranty. Applicable terms are confirmed at purchase.',
       documentsTitle: 'Technical information',
       documentsText: 'We publish verified information only. Confirm exact measurements and connection requirements with the competent service before installation.',
       guidesTitle: 'Practical guidance',
@@ -147,8 +142,7 @@ export const T = {
     faq: [
       ['How do I order?', 'Use “Buy at Digitronics” or WhatsApp. The retailer confirms price, stock, delivery and the final total.'],
       ['Can I pay on delivery?', 'Yes. Digitronics lists cash on delivery for this product. Final conditions are confirmed when ordering.'],
-      ['Is installation included?', 'No. Installation is not included. Have connection requirements and exact measurements confirmed by a competent professional.'],
-      ['What is the warranty?', 'The product is presented with a 1-year manufacturer warranty. Keep proof of purchase and register the product to simplify support.']
+      ['Is installation included?', 'No. Installation is not included. Have connection requirements and exact measurements confirmed by a competent professional.']
     ],
     labels: {
       firstName: 'First name', lastName: 'Last name', name: 'Full name', phone: 'Phone', email: 'Email',
@@ -158,7 +152,7 @@ export const T = {
       company: 'Company', contactName: 'Contact name', country: 'Country', businessType: 'Business type',
       message: 'Message', subject: 'Subject', privacyConsent: 'I agree that my data may be used to process this request.',
       marketingConsent: 'I would like to receive occasional BADAWI information.',
-      choose: 'Choose', productInfo: 'Product information', warranty: 'Warranty', installation: 'Installation',
+      choose: 'Choose', productInfo: 'Product information', installation: 'Installation',
       order: 'Order / delivery', other: 'Other', distributor: 'Distributor', retailerBusiness: 'Retailer',
       hospitality: 'Hospitality', industrial: 'Industry partner', project: 'Property / project'
     },
@@ -181,7 +175,7 @@ export const T = {
     emotion: 'أجمل اللحظات تبدأ قبل تقديم الطعام.',
     emotionText: 'الحرارة، الحركة، الرائحة ومتعة التحضير معاً. BADAWI يضع الطبخ في قلب اللحظات المشتركة.',
     supportTitle: 'العلامة الجيدة تبقى مفيدة بعد البيع.',
-    supportText: 'الضمان وتسجيل المنتج والدعم والنصائح العملية في مكان واحد.',
+    supportText: 'تسجيل المنتج والدعم والنصائح العملية في مكان واحد.',
     productTitle: 'BADAWI BF65INOXP — فرن غاز 65 سم إينوكس',
     productLead: 'فرن غاز 65 سم بلمسة إينوكس وبابين زجاجيين.',
     verified: 'المواصفات المؤكدة',
@@ -211,7 +205,7 @@ export const T = {
     guideTitle: 'نصائح وأدلة',
     readGuide: 'اقرأ الدليل',
     backToSupport: 'العودة إلى الدعم',
-    trust: ['ضمان مصنع لمدة سنة', 'الدفع عند الاستلام عبر Digitronics', 'التوصيل داخل المغرب يؤكد مع البائع'],
+    trust: ['معلومات منتج موثقة', 'الدفع عند الاستلام عبر Digitronics', 'التوصيل داخل المغرب يؤكد مع البائع'],
     productFacts: {
       finishTitle: 'لمسة إينوكس',
       finishText: 'تصميم هادئ وسهل الدمج في المطبخ.',
@@ -221,8 +215,6 @@ export const T = {
       controlsText: 'أزرار التحكم مجمعة في الجهة اليمنى من الواجهة.'
     },
     supportCards: {
-      warrantyTitle: 'الضمان',
-      warrantyText: 'يعرض BF65INOXP بضمان مصنع لمدة سنة واحدة. الشروط المطبقة يتم تأكيدها عند الشراء.',
       documentsTitle: 'المعلومات التقنية',
       documentsText: 'ننشر المعلومات المؤكدة فقط. أكد المقاسات الدقيقة ومتطلبات التوصيل مع المختص قبل التركيب.',
       guidesTitle: 'نصائح عملية',
@@ -231,8 +223,7 @@ export const T = {
     faq: [
       ['كيف أطلب المنتج؟', 'استخدم زر «اشتر من Digitronics» أو واتساب. يؤكد البائع السعر والمخزون والتوصيل والمبلغ النهائي.'],
       ['هل يمكنني الدفع عند الاستلام؟', 'نعم. يعرض Digitronics الدفع عند الاستلام لهذا المنتج. الشروط النهائية يتم تأكيدها عند الطلب.'],
-      ['هل التركيب مشمول؟', 'لا. التركيب غير مشمول. اطلب من فني مختص تأكيد متطلبات التوصيل والمقاسات الدقيقة.'],
-      ['ما مدة الضمان؟', 'يعرض المنتج بضمان مصنع لمدة سنة واحدة. احتفظ بإثبات الشراء وسجل المنتج لتسهيل الدعم.']
+      ['هل التركيب مشمول؟', 'لا. التركيب غير مشمول. اطلب من فني مختص تأكيد متطلبات التوصيل والمقاسات الدقيقة.']
     ],
     labels: {
       firstName: 'الاسم', lastName: 'النسب', name: 'الاسم الكامل', phone: 'الهاتف', email: 'البريد الإلكتروني',
@@ -242,7 +233,7 @@ export const T = {
       company: 'الشركة', contactName: 'اسم جهة الاتصال', country: 'البلد', businessType: 'نوع النشاط',
       message: 'الرسالة', subject: 'الموضوع', privacyConsent: 'أوافق على استخدام بياناتي لمعالجة هذا الطلب.',
       marketingConsent: 'أرغب في تلقي معلومات BADAWI من وقت لآخر.',
-      choose: 'اختر', productInfo: 'معلومات المنتج', warranty: 'الضمان', installation: 'التركيب',
+      choose: 'اختر', productInfo: 'معلومات المنتج', installation: 'التركيب',
       order: 'الطلب / التوصيل', other: 'أخرى', distributor: 'موزع', retailerBusiness: 'متجر / بائع',
       hospitality: 'فندق / مطعم', industrial: 'شريك صناعي', project: 'مشروع / عقار'
     },

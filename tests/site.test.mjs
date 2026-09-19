@@ -6,6 +6,7 @@ import worker, { extractProduct, validateEmail, validatePhone } from '../src/wor
 import { GUIDES } from '../src/content.mjs';
 
 const root = fileURLToPath(new URL('../dist/', import.meta.url));
+const projectRoot = fileURLToPath(new URL('../', import.meta.url));
 const languages = ['fr','ar','en'];
 const routes = [
   '',
@@ -44,6 +45,28 @@ test('product page has canonical, same-path hreflang and parseable JSON-LD', asy
   assert.ok(Array.isArray(data));
   assert.equal(data[0]['@type'],'Product');
   assert.equal(data[0].model,'BF65INOXP');
+});
+
+test('removed service-coverage claims stay absent from source and generated pages', async () => {
+  const removedTerms = [
+    new RegExp(['warr','ant(?:y|ies)'].join(''),'iu'),
+    new RegExp(['gar','antie(?:s)?'].join(''),'iu'),
+    new RegExp(['ض','مان'].join(''),'u')
+  ];
+  const files = ['src/catalog.mjs','src/i18n.mjs','scripts/build.mjs'];
+  for (const file of files) {
+    const content = await readFile(projectRoot + file,'utf8');
+    for (const term of removedTerms) assert.doesNotMatch(content,term,file);
+  }
+  for (const language of languages) {
+    for (const route of routes) {
+      const path = root + language + '/' + route + 'index.html';
+      const content = await readFile(path,'utf8');
+      for (const term of removedTerms) assert.doesNotMatch(content,term,path);
+    }
+  }
+  const discovery = await readFile(root + 'llms.txt','utf8');
+  for (const term of removedTerms) assert.doesNotMatch(discovery,term,'llms.txt');
 });
 
 test('above-the-fold hero images are preloaded responsively', async () => {

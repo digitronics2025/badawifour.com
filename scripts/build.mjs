@@ -144,7 +144,6 @@ function product(l){
     type:l==='ar'?'النوع':l==='en'?'Type':'Type',
     finish:l==='ar'?'التشطيب':l==='en'?'Finish':'Finition',
     doors:l==='ar'?'الأبواب':l==='en'?'Doors':'Portes',
-    warranty:l==='ar'?'الضمان':l==='en'?'Warranty':'Garantie',
     installation:l==='ar'?'التركيب':l==='en'?'Installation':'Installation',
     dimensions:l==='ar'?'الأبعاد':l==='en'?'Dimensions':'Dimensions',
     weight:l==='ar'?'الوزن الصافي':l==='en'?'Net weight':'Poids net'
@@ -165,7 +164,7 @@ function product(l){
     </div></div></section>
     <section class="section video"><div class="shell"><video data-track-video controls playsinline preload="metadata" poster="${FOOD[2]}"><source src="${VIDEO}" type="video/mp4"><p>${l==='ar'?'تعذر تشغيل الفيديو.':l==='en'?'Video playback is unavailable.':'La vidéo ne peut pas être lue.'}</p></video></div></section>
     <section class="section dark"><div class="shell split"><div><h2>${esc(t.verified)}</h2><p class="lede light">${esc(t.specNote)}</p>${btn(p(l,'support/guides/before-installation/'),GUIDES[2].title[l],'ghost')}</div>
-      <dl class="specs"><div><dt>${esc(labels.model)}</dt><dd>BF65INOXP</dd></div><div><dt>${esc(labels.type)}</dt><dd>${esc(PRODUCT_DATA.verifiedFacts.type[l])}</dd></div><div><dt>${esc(labels.finish)}</dt><dd>Inox</dd></div><div><dt>${esc(labels.doors)}</dt><dd>${esc(PRODUCT_DATA.verifiedFacts.doors[l])}</dd></div><div><dt>${esc(labels.warranty)}</dt><dd>${l==='ar'?'سنة واحدة':l==='en'?'1 year':'1 an'}</dd></div><div><dt>${esc(labels.installation)}</dt><dd>${l==='ar'?'غير مشمول':l==='en'?'Not included':'Non incluse'}</dd></div></dl>
+      <dl class="specs"><div><dt>${esc(labels.model)}</dt><dd>BF65INOXP</dd></div><div><dt>${esc(labels.type)}</dt><dd>${esc(PRODUCT_DATA.verifiedFacts.type[l])}</dd></div><div><dt>${esc(labels.finish)}</dt><dd>Inox</dd></div><div><dt>${esc(labels.doors)}</dt><dd>${esc(PRODUCT_DATA.verifiedFacts.doors[l])}</dd></div><div><dt>${esc(labels.installation)}</dt><dd>${l==='ar'?'غير مشمول':l==='en'?'Not included':'Non incluse'}</dd></div></dl>
     </div></section>
     <section class="section"><div class="shell narrow"><div class="section-head"><div>${eyebrow(l==='ar'?'أسئلة شائعة':l==='en'?'FAQ':'QUESTIONS FRÉQUENTES')}<h2>${l==='ar'?'إجابات واضحة قبل الشراء':l==='en'?'Clear answers before you buy':'Des réponses claires avant d’acheter'}</h2></div></div><div class="faq">${t.faq.map(([q,a])=>`<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}</div></div></section>
     <section class="section warm"><div class="shell split"><div><h2>${esc(t.supportTitle)}</h2><p class="lede">${esc(t.supportText)}</p></div><div class="actions vertical">${btn(p(l,'support/register/'),t.register,'dark')}${btn(p(l,'support/request/'),t.request,'ghost')}</div></div></section>
@@ -193,11 +192,10 @@ function support(l){
   return page(l,`BADAWI ${t.nav[2]}`,t.supportText,'support/',
     `<section class="page-hero dark"><div class="shell">${eyebrow(t.nav[2])}<h1>${esc(t.supportTitle)}</h1><p>${esc(t.supportText)}</p><div class="actions">${btn(p(l,'support/register/'),t.register)}${btn(p(l,'support/request/'),t.request,'ghost')}</div></div></section>
     <section class="section"><div class="shell cards">
-      <article><span>01</span><h2>${esc(sc.warrantyTitle)}</h2><p>${esc(sc.warrantyText)}</p></article>
-      <article><span>02</span><h2>${esc(sc.documentsTitle)}</h2><p>${esc(sc.documentsText)}</p></article>
-      <article><span>03</span><h2>${esc(sc.guidesTitle)}</h2><p>${esc(sc.guidesText)}</p></article>
-      <article><span>04</span><h2>${esc(t.register)}</h2>${btn(p(l,'support/register/'),t.register,'text')}</article>
-      <article><span>05</span><h2>${esc(t.request)}</h2>${btn(p(l,'support/request/'),t.request,'text')}</article>
+      <article><span>01</span><h2>${esc(sc.documentsTitle)}</h2><p>${esc(sc.documentsText)}</p></article>
+      <article><span>02</span><h2>${esc(sc.guidesTitle)}</h2><p>${esc(sc.guidesText)}</p></article>
+      <article><span>03</span><h2>${esc(t.register)}</h2>${btn(p(l,'support/register/'),t.register,'text')}</article>
+      <article><span>04</span><h2>${esc(t.request)}</h2>${btn(p(l,'support/request/'),t.request,'text')}</article>
     </div></section>
     ${guidesSection(l,false)}`,2
   );
@@ -268,7 +266,7 @@ function request(l){
     field(x.email,'email','email','autocomplete="email" maxlength="160"')+
     field(x.model,'model','text','required value="BF65INOXP" readonly')+
     field(x.serial,'serial_number','text','maxlength="100"')+
-    select(x.category,'category',[[ 'product',x.productInfo],['warranty',x.warranty],['installation',x.installation],['order',x.order],['other',x.other]],'required')+
+    select(x.category,'category',[[ 'product',x.productInfo],['installation',x.installation],['order',x.order],['other',x.other]],'required')+
     textarea(x.description,'description')+
     field(x.attachment,'attachment','file','accept="image/jpeg,image/png,image/webp"');
   return formPage(l,'support',t.request,t.supportText,fields,2);
@@ -301,21 +299,21 @@ function simple(l,key){
       ['Données que nous collectons','Lorsque vous nous contactez, demandez de l’assistance ou enregistrez un produit, nous collectons les informations que vous fournissez dans le formulaire. Les preuves d’achat et photos sont conservées dans un stockage privé lorsqu’elles sont jointes.'],
       ['Pourquoi nous les utilisons','Ces données servent à traiter votre demande, enregistrer votre produit et fournir l’assistance. Les messages marketing ne sont envoyés que si vous choisissez séparément de les recevoir.'],
       ['Mesure des conversions','Le site enregistre des événements fonctionnels limités, par exemple un clic vers un revendeur ou l’achèvement d’un formulaire. Nous n’enregistrons pas l’adresse IP brute dans ces événements et nous n’utilisons pas de cookie publicitaire pour cette mesure interne.'],
-      ['Conservation et sécurité','Les événements techniques sont supprimés automatiquement après environ 13 mois. Les dossiers d’assistance et d’enregistrement sont conservés aussi longtemps que nécessaire pour le service, la garantie et les obligations applicables. Les pièces jointes sont stockées dans un espace privé.'],
+      ['Conservation et sécurité','Les événements techniques sont supprimés automatiquement après environ 13 mois. Les dossiers d’assistance et d’enregistrement sont conservés aussi longtemps que nécessaire pour le service et les obligations applicables. Les pièces jointes sont stockées dans un espace privé.'],
       ['Vos demandes','Pour une question relative à vos données, utilisez la page Contact en indiquant clairement l’objet de votre demande.']
     ],
     en:[
       ['Data we collect','When you contact us, request support or register a product, we collect the information you provide in the form. Proof of purchase and support photos are stored privately when attached.'],
       ['Why we use it','We use this data to process requests, register products and provide support. Marketing messages are only sent when you separately choose to receive them.'],
       ['Conversion measurement','The site records limited first-party functional events, such as a retailer click or successful form submission. Raw IP addresses are not stored in these event records and this internal measurement does not use advertising cookies.'],
-      ['Retention and security','Technical event records are automatically removed after approximately 13 months. Support and registration records are kept as long as reasonably necessary for service, warranty and applicable obligations. Attachments are stored privately.'],
+      ['Retention and security','Technical event records are automatically removed after approximately 13 months. Support and registration records are kept as long as reasonably necessary for service and applicable obligations. Attachments are stored privately.'],
       ['Your requests','For a data-related request, use the Contact page and clearly state the purpose of your request.']
     ],
     ar:[
       ['البيانات التي نجمعها','عند التواصل معنا أو طلب الدعم أو تسجيل منتج، نجمع المعلومات التي تدخلها في النموذج. تحفظ إثباتات الشراء وصور الدعم في مساحة تخزين خاصة عند إرفاقها.'],
       ['لماذا نستخدمها','نستخدم البيانات لمعالجة الطلبات وتسجيل المنتجات وتقديم الدعم. لا ترسل رسائل تسويقية إلا إذا اخترت بشكل منفصل تلقيها.'],
       ['قياس التحويلات','يسجل الموقع أحداثاً وظيفية محدودة مثل الضغط على رابط البائع أو إتمام نموذج بنجاح. لا نخزن عنوان IP الخام ضمن سجلات هذه الأحداث ولا نستخدم ملفات تعريف ارتباط إعلانية لهذا القياس الداخلي.'],
-      ['الاحتفاظ والأمان','تحذف سجلات الأحداث التقنية تلقائياً بعد نحو 13 شهراً. تحفظ سجلات الدعم والتسجيل للمدة اللازمة للخدمة والضمان والالتزامات المطبقة. تحفظ المرفقات بشكل خاص.'],
+      ['الاحتفاظ والأمان','تحذف سجلات الأحداث التقنية تلقائياً بعد نحو 13 شهراً. تحفظ سجلات الدعم والتسجيل للمدة اللازمة للخدمة والالتزامات المطبقة. تحفظ المرفقات بشكل خاص.'],
       ['طلباتك','لطلب متعلق ببياناتك استخدم صفحة الاتصال واشرح موضوع الطلب بوضوح.']
     ]
   };
@@ -324,19 +322,19 @@ function simple(l,key){
       ['Éditeur','BADAWI est une marque présentée depuis Casablanca, Maroc. Le site officiel badawifour.com fournit des informations de marque, produit et assistance.'],
       ['Vente et paiement','Les achats actuellement proposés via le site sont redirigés vers Digitronics, qui confirme le prix, le stock, la livraison et les conditions de commande. BADAWI ne traite pas directement le paiement sur ce site.'],
       ['Informations produit','Nous publions uniquement les caractéristiques que nous pouvons vérifier. Les dimensions produit 65 × 55 × 55 cm et le poids net de 12 kg sont documentés. Les dégagements d’installation, exigences de raccordement et autres données non validées doivent être confirmés avant installation.'],
-      ['Garantie et installation','Le BF65INOXP est présenté avec une garantie constructeur de 1 an. L’installation n’est pas incluse. Les conditions applicables sont confirmées lors de l’achat.']
+      ['Installation','L’installation du BF65INOXP n’est pas incluse. Les conditions applicables sont confirmées lors de l’achat.']
     ],
     en:[
       ['Publisher','BADAWI is a brand presented from Casablanca, Morocco. The official badawifour.com site provides brand, product and support information.'],
       ['Sales and payment','Purchases currently offered through this site are handed off to Digitronics, which confirms price, stock, delivery and order terms. BADAWI does not directly process payment on this site.'],
       ['Product information','We publish product characteristics only when they can be verified. Product dimensions of 65 × 55 × 55 cm and a 12 kg net weight are documented. Installation clearances, connection requirements and other unvalidated technical data must be confirmed before installation.'],
-      ['Warranty and installation','BF65INOXP is presented with a 1-year manufacturer warranty. Installation is not included. Applicable conditions are confirmed when purchasing.']
+      ['Installation','BF65INOXP installation is not included. Applicable conditions are confirmed when purchasing.']
     ],
     ar:[
       ['الناشر','BADAWI علامة تقدم من الدار البيضاء، المغرب. يوفر الموقع الرسمي badawifour.com معلومات عن العلامة والمنتج والدعم.'],
       ['البيع والدفع','عمليات الشراء المعروضة حالياً عبر الموقع تنتقل إلى Digitronics الذي يؤكد السعر والمخزون والتوصيل وشروط الطلب. لا يعالج موقع BADAWI الدفع مباشرة.'],
       ['معلومات المنتج','ننشر مواصفات المنتج فقط عندما نستطيع التحقق منها. أبعاد المنتج الموثقة هي 65 × 55 × 55 سم والوزن الصافي 12 كغ. يجب تأكيد مسافات التركيب ومتطلبات التوصيل وأي بيانات تقنية غير موثقة قبل التركيب.'],
-      ['الضمان والتركيب','يعرض BF65INOXP بضمان مصنع لمدة سنة واحدة. التركيب غير مشمول. يتم تأكيد الشروط المطبقة عند الشراء.']
+      ['التركيب','تركيب BF65INOXP غير مشمول. يتم تأكيد الشروط المطبقة عند الشراء.']
     ]
   };
   const sections=(key==='privacy'?privacy:legal)[l];
@@ -436,7 +434,7 @@ await write('manifest.webmanifest',JSON.stringify({
 const urls=LANGS.flatMap(l=>localizedRoutes.map(route=>absolute(l,route)));
 await write('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(url=>`  <url><loc>${url}</loc><lastmod>${BUILD_DATE}</lastmod></url>`).join('\n')}\n</urlset>\n`);
 await write('robots.txt',`User-agent: *\nAllow: /\nDisallow: /api/\nSitemap: ${ORIGIN}/sitemap.xml\n`);
-await write('llms.txt',`# BADAWI FOUR\n\nOfficial BADAWI FOUR website for BADAWI appliances: ${ORIGIN}\n\n## Current verified product\n- BF65INOXP: 65 cm gas oven, inox finish, two glazed front doors.\n- Manufacturer warranty: 1 year.\n- Installation is not included.\n- Verified physical data: 65 × 55 × 55 cm; net weight 12 kg. Exact gas connection, capacity and other unverified technical characteristics are intentionally not claimed until validated.\n\n## Languages\n- French: ${ORIGIN}/fr/\n- Arabic: ${ORIGIN}/ar/\n- English: ${ORIGIN}/en/\n\n## Support\n- Product registration and support are available under each language's /support/ section.\n- Current retailer: Digitronics.\n`);
+await write('llms.txt',`# BADAWI FOUR\n\nOfficial BADAWI FOUR website for BADAWI appliances: ${ORIGIN}\n\n## Current verified product\n- BF65INOXP: 65 cm gas oven, inox finish, two glazed front doors.\n- Installation is not included.\n- Verified physical data: 65 × 55 × 55 cm; net weight 12 kg. Exact gas connection, capacity and other unverified technical characteristics are intentionally not claimed until validated.\n\n## Languages\n- French: ${ORIGIN}/fr/\n- Arabic: ${ORIGIN}/ar/\n- English: ${ORIGIN}/en/\n\n## Support\n- Product registration and support are available under each language's /support/ section.\n- Current retailer: Digitronics.\n`);
 await write('.well-known/security.txt',`Contact: ${ORIGIN}/en/contact/\nCanonical: ${ORIGIN}/.well-known/security.txt\nExpires: 2027-09-19T00:00:00Z\nPreferred-Languages: en, fr, ar\nPolicy: ${ORIGIN}/en/privacy/\n`);
 await write('_headers',`/*
   X-Frame-Options: DENY
