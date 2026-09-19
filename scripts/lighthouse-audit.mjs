@@ -55,6 +55,29 @@ for (const categoryKey of diagnosticCategories) {
 }
 if (diagnosticRows.length) {
   console.log('BADAWI Lighthouse diagnostics:', JSON.stringify(diagnosticRows));
+  const detailRows = diagnosticRows.map((row) => {
+    const audit = audits[row.id] || {};
+    const items = Array.isArray(audit.details?.items) ? audit.details.items.slice(0, 8) : [];
+    return {
+      id: row.id,
+      items: items.map((item) => {
+        const node = item.node || item.tapTarget || {};
+        return {
+          selector: node.selector || '',
+          snippet: node.snippet || '',
+          nodeLabel: node.nodeLabel || '',
+          explanation: node.explanation || '',
+          source: item.source || '',
+          description: item.description || '',
+          contrastRatio: item.contrastRatio,
+          expectedContrastRatio: item.expectedContrastRatio,
+          fontSize: item.fontSize,
+          issueType: item.issueType || ''
+        };
+      })
+    };
+  });
+  console.log('BADAWI Lighthouse detail:', JSON.stringify(detailRows));
 }
 
 const strict = process.env.LIGHTHOUSE_STRICT === '1';
