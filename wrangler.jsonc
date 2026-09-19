@@ -7,7 +7,17 @@
     "directory": "./dist",
     "binding": "ASSETS",
     "html_handling": "auto-trailing-slash",
-    "not_found_handling": "404-page"
+    "not_found_handling": "404-page",
+    "run_worker_first": [
+      "/*",
+      "!/assets/*",
+      "!/favicon.svg",
+      "!/manifest.webmanifest",
+      "!/sitemap.xml",
+      "!/robots.txt",
+      "!/.well-known/*",
+      "!/llms.txt"
+    ]
   },
   "observability": {
     "enabled": true

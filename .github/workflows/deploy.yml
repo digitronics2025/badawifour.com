@@ -188,15 +188,40 @@ jobs:
           test "$health_ok" -eq 1 || { echo "::error::Production health endpoint never became reachable."; exit 1; }
           node -e "const x=require('/tmp/health.json'); if(!x.ok||!x.db_bound||!x.uploads_bound) process.exit(1)"
 
+          check_url() {
+            local url="$1"
+            for i in {1..6}; do
+              if curl --fail --silent --show-error --max-time 20 "$url" > /dev/null; then
+                echo "Verified $url"
+                return 0
+              fi
+              sleep 3
+            done
+            echo "::error::Production URL failed verification: $url"
+            return 1
+          }
+
           for path in /fr/ /ar/ /en/ /fr/products/ /fr/products/bf65inoxp/ /fr/support/guides/before-installation/ /sitemap.xml /manifest.webmanifest /.well-known/security.txt; do
-            curl --fail --silent --show-error --max-time 20 "https://badawifour.com$path" > /dev/null
+            check_url "https://badawifour.com$path"
           done
 
-          curl --fail --silent --show-error --max-time 20 https://badawifour.com/api/retailer/bf65inoxp > /tmp/retailer.json
-          node -e "const x=require('/tmp/retailer.json'); if(x.source!=='Digitronics') process.exit(1)"
+          retailer_ok=0
+          for i in {1..6}; do
+            if curl --fail --silent --show-error --max-time 20 https://badawifour.com/api/retailer/bf65inoxp > /tmp/retailer.json && node -e "const x=require('/tmp/retailer.json'); if(x.source!=='Digitronics') process.exit(1)"; then
+              retailer_ok=1
+              break
+            fi
+            sleep 3
+          done
+          test "$retailer_ok" -eq 1 || { echo "::error::Retailer API failed verification."; exit 1; }
 
-          curl --silent --show-error --head --max-time 20 https://www.badawifour.com/fr/ > /tmp/www-headers.txt
-          grep -qi '^location: https://badawifour.com/fr/' /tmp/www-headers.txt
+          redirect_ok=0
+          for i in {1..6}; do
+            curl --silent --show-error --head --max-time 20 https://www.badawifour.com/fr/ > /tmp/www-headers.txt || true
+            if grep -qi '^location: https://badawifour.com/fr/' /tmp/www-headers.txt; then redirect_ok=1; break; fi
+            sleep 3
+          done
+          test "$redirect_ok" -eq 1 || { echo "::error::www canonical redirect failed verification."; exit 1; }
 
           curl --silent --show-error --head --max-time 20 https://badawifour.com/fr/ > /tmp/headers.txt
           grep -qi '^x-content-type-options: nosniff' /tmp/headers.txt
