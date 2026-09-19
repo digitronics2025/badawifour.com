@@ -291,19 +291,19 @@ function simple(l,key){
     fr:[
       ['Éditeur','BADAWI est une marque présentée depuis Casablanca, Maroc. Le site officiel badawifour.com fournit des informations de marque, produit et assistance.'],
       ['Vente et paiement','Les achats actuellement proposés via le site sont redirigés vers Digitronics, qui confirme le prix, le stock, la livraison et les conditions de commande. BADAWI ne traite pas directement le paiement sur ce site.'],
-      ['Informations produit','Nous publions uniquement les caractéristiques que nous pouvons vérifier. Les mesures exactes, exigences de raccordement et autres données non validées doivent être confirmées avant installation.'],
+      ['Informations produit','Nous publions uniquement les caractéristiques que nous pouvons vérifier. Les dimensions produit 65 × 55 × 55 cm et le poids net de 12 kg sont documentés. Les dégagements d’installation, exigences de raccordement et autres données non validées doivent être confirmés avant installation.'],
       ['Garantie et installation','Le BF65INOXP est présenté avec une garantie constructeur de 1 an. L’installation n’est pas incluse. Les conditions applicables sont confirmées lors de l’achat.']
     ],
     en:[
       ['Publisher','BADAWI is a brand presented from Casablanca, Morocco. The official badawifour.com site provides brand, product and support information.'],
       ['Sales and payment','Purchases currently offered through this site are handed off to Digitronics, which confirms price, stock, delivery and order terms. BADAWI does not directly process payment on this site.'],
-      ['Product information','We publish product characteristics only when they can be verified. Exact measurements, connection requirements and other unvalidated technical data must be confirmed before installation.'],
+      ['Product information','We publish product characteristics only when they can be verified. Product dimensions of 65 × 55 × 55 cm and a 12 kg net weight are documented. Installation clearances, connection requirements and other unvalidated technical data must be confirmed before installation.'],
       ['Warranty and installation','BF65INOXP is presented with a 1-year manufacturer warranty. Installation is not included. Applicable conditions are confirmed when purchasing.']
     ],
     ar:[
       ['الناشر','BADAWI علامة تقدم من الدار البيضاء، المغرب. يوفر الموقع الرسمي badawifour.com معلومات عن العلامة والمنتج والدعم.'],
       ['البيع والدفع','عمليات الشراء المعروضة حالياً عبر الموقع تنتقل إلى Digitronics الذي يؤكد السعر والمخزون والتوصيل وشروط الطلب. لا يعالج موقع BADAWI الدفع مباشرة.'],
-      ['معلومات المنتج','ننشر مواصفات المنتج فقط عندما نستطيع التحقق منها. يجب تأكيد المقاسات الدقيقة ومتطلبات التوصيل وأي بيانات تقنية غير موثقة قبل التركيب.'],
+      ['معلومات المنتج','ننشر مواصفات المنتج فقط عندما نستطيع التحقق منها. أبعاد المنتج الموثقة هي 65 × 55 × 55 سم والوزن الصافي 12 كغ. يجب تأكيد مسافات التركيب ومتطلبات التوصيل وأي بيانات تقنية غير موثقة قبل التركيب.'],
       ['الضمان والتركيب','يعرض BF65INOXP بضمان مصنع لمدة سنة واحدة. التركيب غير مشمول. يتم تأكيد الشروط المطبقة عند الشراء.']
     ]
   };
@@ -388,7 +388,7 @@ await write('manifest.webmanifest',JSON.stringify({
 const urls=LANGS.flatMap(l=>localizedRoutes.map(route=>absolute(l,route)));
 await write('sitemap.xml',\`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n\${urls.map(url=>\`  <url><loc>\${url}</loc><lastmod>\${BUILD_DATE}</lastmod></url>\`).join('\n')}\n</urlset>\n\`);
 await write('robots.txt',\`User-agent: *\nAllow: /\nDisallow: /api/\nSitemap: \${ORIGIN}/sitemap.xml\n\`);
-await write('llms.txt',\`# BADAWI\n\nOfficial BADAWI appliance brand website: \${ORIGIN}\n\n## Current verified product\n- BF65INOXP: 65 cm gas oven, inox finish, two glazed front doors.\n- Manufacturer warranty: 1 year.\n- Installation is not included.\n- Exact dimensions, capacity, gas connection and unverified technical characteristics are intentionally not claimed on this site until manufacturer documentation is validated.\n\n## Languages\n- French: \${ORIGIN}/fr/\n- Arabic: \${ORIGIN}/ar/\n- English: \${ORIGIN}/en/\n\n## Support\n- Product registration and support are available under each language's /support/ section.\n- Current retailer: Digitronics.\n\`);
+await write('llms.txt',\`# BADAWI\n\nOfficial BADAWI appliance brand website: \${ORIGIN}\n\n## Current verified product\n- BF65INOXP: 65 cm gas oven, inox finish, two glazed front doors.\n- Manufacturer warranty: 1 year.\n- Installation is not included.\n- Verified physical data: 65 × 55 × 55 cm; net weight 12 kg. Exact gas connection, capacity and other unverified technical characteristics are intentionally not claimed until validated.\n\n## Languages\n- French: \${ORIGIN}/fr/\n- Arabic: \${ORIGIN}/ar/\n- English: \${ORIGIN}/en/\n\n## Support\n- Product registration and support are available under each language's /support/ section.\n- Current retailer: Digitronics.\n\`);
 await write('.well-known/security.txt',\`Contact: \${ORIGIN}/en/contact/\nCanonical: \${ORIGIN}/.well-known/security.txt\nExpires: 2027-09-19T00:00:00Z\nPreferred-Languages: en, fr, ar\nPolicy: \${ORIGIN}/en/privacy/\n\`);
 await write('_headers',\`/*
   X-Frame-Options: DENY
