@@ -103,7 +103,9 @@ function product(l){
     additionalProperty:[
       {'@type':'PropertyValue',name:l==='ar'?'النوع':l==='fr'?'Type':'Type',value:PRODUCT_DATA.verifiedFacts.type[l]},
       {'@type':'PropertyValue',name:l==='ar'?'التشطيب':l==='fr'?'Finition':'Finish',value:'Inox'},
-      {'@type':'PropertyValue',name:l==='ar'?'الأبواب':l==='fr'?'Portes':'Doors',value:PRODUCT_DATA.verifiedFacts.doors[l]}
+      {'@type':'PropertyValue',name:l==='ar'?'الأبواب':l==='fr'?'Portes':'Doors',value:PRODUCT_DATA.verifiedFacts.doors[l]},
+      {'@type':'PropertyValue',name:l==='ar'?'الأبعاد':l==='fr'?'Dimensions':'Dimensions',value:PRODUCT_DATA.verifiedFacts.dimensions[l]},
+      {'@type':'PropertyValue',name:l==='ar'?'الوزن الصافي':l==='fr'?'Poids net':'Net weight',value:PRODUCT_DATA.verifiedFacts.weight[l]}
     ]
   };
   const breadcrumbSchema={'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:[
@@ -118,7 +120,9 @@ function product(l){
     finish:l==='ar'?'التشطيب':l==='en'?'Finish':'Finition',
     doors:l==='ar'?'الأبواب':l==='en'?'Doors':'Portes',
     warranty:l==='ar'?'الضمان':l==='en'?'Warranty':'Garantie',
-    installation:l==='ar'?'التركيب':l==='en'?'Installation':'Installation'
+    installation:l==='ar'?'التركيب':l==='en'?'Installation':'Installation',
+    dimensions:l==='ar'?'الأبعاد':l==='en'?'Dimensions':'Dimensions',
+    weight:l==='ar'?'الوزن الصافي':l==='en'?'Net weight':'Poids net'
   };
   return page(l,t.productTitle,t.productLead,'products/bf65inoxp/',
     \`<section class="product-hero"><div class="shell product-grid">
