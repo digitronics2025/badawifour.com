@@ -73,6 +73,11 @@ test('homepages include a localized WhatsApp call to action', async () => {
   }
 });
 
+test('mobile navigation becomes visible when the menu is expanded', async () => {
+  const css = await readFile(projectRoot + 'src/site.css','utf8');
+  assert.match(css,/@media\(max-width:900px\)\{[\s\S]*?#mobile:not\(\[hidden\]\)\{display:block\}/);
+});
+
 test('removed service-coverage claims stay absent from source and generated pages', async () => {
   const removedTerms = [
     new RegExp(['warr','ant(?:y|ies)'].join(''),'iu'),

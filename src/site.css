@@ -103,6 +103,9 @@ nav a[aria-current=page]{font-weight:800}
 .whatsapp-btn>span:not(.btn-arrow){flex:1}
 .btn.whatsapp{background:#137a45;color:#fff}
 .float .whatsapp-icon{width:27px;height:27px}
+@media(max-width:900px){
+  #mobile:not([hidden]){display:block}
+}
 @media(max-width:620px){
   .nav{gap:14px}
   .brand-header{width:34px;height:34px}
