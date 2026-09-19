@@ -1,33 +1,56 @@
 import { mkdir, rm, writeFile, readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
+import { T } from '../src/i18n.mjs';
+import { PRODUCTS, RETAILER as RETAILER_INFO } from '../src/catalog.mjs';
+import { GUIDES } from '../src/content.mjs';
+
 const OUT=new URL('../dist/',import.meta.url).pathname;
 const ORIGIN='https://badawifour.com';
-const RETAILER='https://digitronics.ma/fr/produit/badawi-four-bf65inoxp-cuisinere-a-gaz-4-feux';
-const PHONE='212664999733';
-const PRODUCT=[
-'https://digitronics.ma/r2/products/BF65INOXP/547a2fde-1669-42a2-bc58-edf550c927b7.webp.w1080.webp',
-'https://digitronics.ma/r2/products/BF65INOXP/f1f2fbcd-8daf-4645-9413-bfad8e496483.webp.w1080.webp',
-'https://digitronics.ma/r2/products/BF65INOXP/85cf78e6-3920-4db0-9ec6-762f68fecc78.webp.w1080.webp'];
-const FOOD=[
-'https://digitronics.ma/landing/badawi/badawi-food-roast-chicken.webp',
-'https://digitronics.ma/landing/badawi/badawi-food-oven-roast.webp',
-'https://digitronics.ma/landing/badawi/badawi-food-shared-table.webp'];
-const VIDEO='https://digitronics.ma/landing/badawi/badawi-four-showcase.mp4';
+const PRODUCT_DATA=PRODUCTS[0];
+const RETAILER=RETAILER_INFO.productUrl;
+const PHONE=RETAILER_INFO.phone;
+const PRODUCT=PRODUCT_DATA.media.product.map(media=>media.src);
+const FOOD=PRODUCT_DATA.media.food;
+const VIDEO=PRODUCT_DATA.media.video;
+const LANGS=['fr','ar','en'];
+const BUILD_DATE=new Date().toISOString().slice(0,10);
 
-import { T } from '../src/i18n.mjs';
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const p=(l,x='')=>`/${l}/${x}`.replace(/\/{2,}/g,'/').replace(/(?<!\/)$/,'/');
-const wa=(l)=>`https://wa.me/${PHONE}?text=${encodeURIComponent((l==='ar'?'مرحبا، أريد معلومات عن BADAWI BF65INOXP.':l==='en'?'Hello, I would like more information about BADAWI BF65INOXP.':`Bonjour, je souhaite avoir plus d'informations sur BADAWI BF65INOXP.`)+`\n${ORIGIN}/${l}/`)}`;
-const btn=(u,t,k='primary',a='')=>`<a class="btn ${k}" href="${u}" ${a}>${esc(t)}<span>↗</span></a>`;
-const img=(u,a,c='')=>`<img class="${c}" src="${u}" alt="${esc(a)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">`;
-const logo=()=>`<a class="brand" href="/fr/" data-home-link aria-label="BADAWI"><svg viewBox="0 0 32 40" aria-hidden="true"><path d="M17 1c2 8-4 10 1 16 1-5 5-7 6-11 7 8 9 17 5 25-3 6-8 9-14 9C7 40 1 34 1 26 1 17 8 12 17 1Z" fill="currentColor"/><path d="M16 20c3 4 4 7 2 11-1 2-3 4-6 4-4 0-7-3-7-7 0-5 4-8 8-12-1 4 0 6 3 8 0-2 0-3 0-4Z" fill="#fff" opacity=".85"/></svg><span>BADAWI</span></a>`;
+const absolute=(l,x='')=>ORIGIN+p(l,x);
+const wa=(l,context='product')=>{
+  const messages={
+    fr:context==='general'?'Bonjour, je souhaite avoir plus d’informations sur BADAWI.':"Bonjour, je souhaite avoir plus d’informations sur BADAWI BF65INOXP.",
+    en:context==='general'?'Hello, I would like more information about BADAWI.':'Hello, I would like more information about BADAWI BF65INOXP.',
+    ar:context==='general'?'مرحبا، أريد معلومات عن BADAWI.':'مرحبا، أريد معلومات عن BADAWI BF65INOXP.'
+  };
+  return `https://wa.me/${PHONE}?text=${encodeURIComponent(messages[l]+'\n'+absolute(l,context==='product'?'products/bf65inoxp/':''))}`;
+};
+const btn=(u,t,k='primary',a='')=>`<a class="btn ${k}" href="${u}" ${a}>${esc(t)}<span aria-hidden="true">↗</span></a>`;
 const eyebrow=s=>`<p class="eyebrow">${esc(s)}</p>`;
-const langs=(l)=>`<div class="langs"><a href="/fr/" ${l==='fr'?'aria-current="page"':''}>FR</a><a href="/ar/" ${l==='ar'?'aria-current="page"':''}>ع</a><a href="/en/" ${l==='en'?'aria-current="page"':''}>EN</a></div>`;
-function header(l,current=''){const t=T[l],paths=['products/bf65inoxp/','inspiration/','support/','about/','where-to-buy/','professionals/'];return `<header><div class="shell nav">${logo()}<nav>${t.nav.map((n,i)=>`<a ${current===i?'aria-current="page"':''} href="${p(l,paths[i])}">${esc(n)}</a>`).join('')}</nav>${langs(l)}<button class="menu" aria-expanded="false" aria-controls="mobile">Menu</button></div><div id="mobile" hidden>${t.nav.map((n,i)=>`<a href="${p(l,paths[i])}">${esc(n)}</a>`).join('')}</div></header>`}
-function footer(l){const t=T[l];return `<footer><div class="shell foot"><div>${logo()}<p>${esc(t.hero)}</p></div><div><a href="${p(l,'products/bf65inoxp/')}">BF65INOXP</a><a href="${p(l,'support/')}">${esc(t.nav[2])}</a><a href="${p(l,'contact/')}">Contact</a></div><div><a href="${p(l,'privacy/')}">${esc(t.privacy)}</a><a href="${p(l,'legal/')}">${esc(t.legal)}</a><a href="${p(l,'professionals/')}">${esc(t.nav[5])}</a></div></div><div class="shell copy">© 2026 BADAWI · Casablanca, Morocco</div></footer>`}
-function head(l,title,desc,path,image=PRODUCT[0],schema=''){const url=ORIGIN+p(l,path);return `<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><link rel="canonical" href="${url}">${['fr','ar','en'].map(x=>`<link rel="alternate" hreflang="${x}" href="${ORIGIN+p(x,path)}">`).join('')}<link rel="alternate" hreflang="x-default" href="${ORIGIN+p('fr',path)}"><meta name="theme-color" content="#171817"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${url}"><meta property="og:image" content="${image}"><meta name="twitter:card" content="summary_large_image"><link rel="stylesheet" href="/assets/site.css"><script type="module" src="/assets/site.js"></script>${schema?`<script type="application/ld+json">${schema}</script>`:''}`}
-const page=(l,title,desc,path,body,current='',schema='')=>`<!doctype html><html lang="${l}" dir="${T[l].dir}"><head>${head(l,title,desc,path,PRODUCT[0],schema)}</head><body>${header(l,current)}<main>${body}</main>${footer(l)}<a class="float" href="${wa(l)}">WA</a></body></html>`;
+const responsive=(media,alt,cls='',eager=false,sizes='100vw')=>{
+  const src=typeof media==='string'?media:media.src;
+  const srcset=typeof media==='string'?'':(media.srcset||[]).map(([w,u])=>`${u} ${w}w`).join(', ');
+  return `<img${cls?` class="${cls}"`:''} src="${src}"${srcset?` srcset="${srcset}" sizes="${sizes}"`:''} alt="${esc(alt)}" loading="${eager?'eager':'lazy'}" decoding="async"${eager?' fetchpriority="high"':''} referrerpolicy="no-referrer">`;
+};
+const img=(u,a,c='')=>responsive(u,a,c,false);
+const logo=l=>`<a class="brand" href="${p(l)}" aria-label="BADAWI"><svg viewBox="0 0 32 40" aria-hidden="true"><path d="M17 1c2 8-4 10 1 16 1-5 5-7 6-11 7 8 9 17 5 25-3 6-8 9-14 9C7 40 1 34 1 26 1 17 8 12 17 1Z" fill="currentColor"/><path d="M16 20c3 4 4 7 2 11-1 2-3 4-6 4-4 0-7-3-7-7 0-5 4-8 8-12-1 4 0 6 3 8 0-2 0-3 0-4Z" fill="#fff" opacity=".85"/></svg><span>BADAWI</span></a>`;
+const langs=(l,path)=>`<div class="langs" aria-label="Language">${LANGS.map(x=>`<a href="${p(x,path)}" lang="${x}" ${l===x?'aria-current="page"':''}>${x==='ar'?'ع':x.toUpperCase()}</a>`).join('')}</div>`;
+function header(l,current='',path=''){
+  const t=T[l],paths=['products/','inspiration/','support/','about/','where-to-buy/','professionals/'];
+  const skip=l==='ar'?'انتقل إلى المحتوى':l==='en'?'Skip to content':'Aller au contenu';
+  return `<header><a class="skip" href="#main">${skip}</a><div class="shell nav">${logo(l)}<nav aria-label="Main navigation">${t.nav.map((n,i)=>`<a ${current===i?'aria-current="page"':''} href="${p(l,paths[i])}">${esc(n)}</a>`).join('')}</nav>${langs(l,path)}<button class="menu" type="button" aria-expanded="false" aria-controls="mobile">${esc(t.menu)}</button></div><div id="mobile" hidden>${t.nav.map((n,i)=>`<a href="${p(l,paths[i])}">${esc(n)}</a>`).join('')}</div></header>`;
+}
+function footer(l){
+  const t=T[l];
+  return `<footer><div class="shell foot"><div>${logo(l)}<p>${esc(t.hero)}</p></div><div><a href="${p(l,'products/')}">${esc(t.nav[0])}</a><a href="${p(l,'products/bf65inoxp/')}">BF65INOXP</a><a href="${p(l,'support/')}">${esc(t.nav[2])}</a><a href="${p(l,'contact/')}">${l==='ar'?'اتصل بنا':'Contact'}</a></div><div><a href="${p(l,'privacy/')}">${esc(t.privacy)}</a><a href="${p(l,'legal/')}">${esc(t.legal)}</a><a href="${p(l,'professionals/')}">${esc(t.nav[5])}</a></div></div><div class="shell copy">© 2026 BADAWI · Casablanca, Morocco</div></footer>`;
+}
+function head(l,title,desc,path,image=PRODUCT[0],schema=''){
+  const url=absolute(l,path),t=T[l];
+  return `<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><meta name="robots" content="index,follow,max-image-preview:large"><link rel="canonical" href="${url}">${LANGS.map(x=>`<link rel="alternate" hreflang="${x}" href="${absolute(x,path)}">`).join('')}<link rel="alternate" hreflang="x-default" href="${absolute('fr',path)}"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><link rel="preconnect" href="https://digitronics.ma" crossorigin><meta name="theme-color" content="#171817"><meta property="og:type" content="website"><meta property="og:site_name" content="BADAWI"><meta property="og:locale" content="${esc(t.locale)}"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${url}"><meta property="og:image" content="${image}"><meta property="og:image:alt" content="BADAWI BF65INOXP"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${esc(title)}"><meta name="twitter:description" content="${esc(desc)}"><meta name="twitter:image" content="${image}"><link rel="stylesheet" href="/assets/site.css"><script type="module" src="/assets/site.js"></script>${schema?`<script type="application/ld+json">${schema}</script>`:''}`;
+}
+const page=(l,title,desc,path,body,current='',schema='')=>`<!doctype html><html lang="${l}" dir="${T[l].dir}"><head>${head(l,title,desc,path,PRODUCT[0],schema)}</head><body>${header(l,current,path)}<main id="main">${body}</main>${footer(l)}<a class="float" data-track="whatsapp_click" data-destination="whatsapp" aria-label="${esc(T[l].whatsapp)}" href="${wa(l,'general')}" rel="noopener">WA</a></body></html>`;
 
 function home(l){const t=T[l];return page(l,`BADAWI — ${t.hero}`,t.intro,'',`<section class="hero"><div class="hero-bg">${img(FOOD[2],t.hero)}</div><div class="shade"></div><div class="shell hero-copy">${eyebrow('BADAWI · CUISINE')}<h1>${esc(t.hero)}</h1><p>${esc(t.intro)}</p><div class="actions">${btn(p(l,'products/bf65inoxp/'),t.discover)}${btn(p(l,'where-to-buy/'),t.buy,'ghost')}</div></div></section><section class="section"><div class="shell split"><div class="product-card">${img(PRODUCT[1],'BADAWI BF65INOXP')}</div><div>${eyebrow(t.flag)}<h2>BF65INOXP</h2><p class="lede">${esc(t.flagText)}</p><div class="chips"><span>BF65INOXP</span><span>65 cm</span><span>INOX</span></div>${btn(p(l,'products/bf65inoxp/'),t.discover,'dark')}</div></div></section><section class="section dark"><div class="shell">${eyebrow('À TABLE')}<h2>${esc(t.emotion)}</h2><p class="lede light">${esc(t.emotionText)}</p><div class="food">${FOOD.map((x,i)=>img(x,['Food','Oven','Table'][i])).join('')}</div></div></section><section class="section warm"><div class="shell split"><div>${eyebrow('APRÈS L’ACHAT')}<h2>${esc(t.supportTitle)}</h2><p class="lede">${esc(t.supportText)}</p>${btn(p(l,'support/'),t.nav[2],'dark')}</div><div class="support-links"><a href="${p(l,'support/register/')}">01 <b>${esc(t.register)}</b></a><a href="${p(l,'support/request/')}">02 <b>${esc(t.request)}</b></a><a href="${p(l,'where-to-buy/')}">03 <b>${esc(t.buy)}</b></a></div></div></section>`)}
 function product(l){const t=T[l];const schema=JSON.stringify({'@context':'https://schema.org','@type':'Product',name:'BADAWI BF65INOXP',model:'BF65INOXP',brand:{'@type':'Brand',name:'BADAWI'},description:t.productLead,url:ORIGIN+p(l,'products/bf65inoxp/'),image:PRODUCT,additionalProperty:[{'@type':'PropertyValue',name:'Type',value:l==='ar'?'فرن غاز':'Gas oven'},{'@type':'PropertyValue',name:'Finish',value:'Inox'},{'@type':'PropertyValue',name:'Doors',value:l==='ar'?'بابان زجاجيان':'Two glazed doors'}]});return page(l,t.productTitle,t.productLead,'products/bf65inoxp/',`<section class="product-hero"><div class="shell product-grid"><div class="gallery" data-gallery><div class="main">${img(PRODUCT[0],'BADAWI BF65INOXP','gallery-current')}</div>${PRODUCT.map((x,i)=>`<button data-thumb="${i}">${img(x,'BF65INOXP '+(i+1))}</button>`).join('')}</div><div class="product-info">${eyebrow('BADAWI · BF65INOXP')}<h1>BF65INOXP</h1><h2>${esc(t.hero)}</h2><p>${esc(t.productLead)}</p><div class="live" data-retailer-live><div><small>${esc(t.price)}</small><b data-price>—</b></div><div><small>${esc(t.stock)}</small><b data-stock>—</b></div></div><div class="actions vertical">${btn(RETAILER,t.retailer,'primary','rel="noopener"')}${btn(wa(l),t.whatsapp,'dark','rel="noopener"')}</div></div></div></section><section class="section"><div class="shell">${eyebrow(t.verified)}<h2>${esc(t.details)}</h2><div class="details"><article><span>01</span><h3>${l==='ar'?'لمسة إينوكس':'Stainless-steel finish'}</h3><p>${l==='fr'?'Une silhouette sobre qui s’intègre facilement dans la cuisine.':l==='ar'?'تصميم هادئ وسهل الدمج في المطبخ.':'A restrained finish designed to sit comfortably in the kitchen.'}</p></article><article><span>02</span><h3>${l==='ar'?'بابان زجاجيان':'Two glazed doors'}</h3><p>${l==='fr'?'Deux ouvertures frontales avec fenêtres vitrées et poignées noires.':l==='ar'?'فتحتان أماميتان بزجاج ومقابض سوداء.':'Two front openings with glazed windows and black handles.'}</p></article><article><span>03</span><h3>${l==='ar'?'تحكم أمامي':'Front controls'}</h3><p>${l==='fr'?'Les commandes sont regroupées sur le côté droit de la façade.':l==='ar'?'أزرار التحكم مجمعة في الجهة اليمنى من الواجهة.':'Controls are grouped on the right side of the front panel.'}</p></article></div></div></section><section class="section video"><div class="shell"><video controls preload="metadata" poster="${FOOD[2]}"><source src="${VIDEO}" type="video/mp4"></video></div></section><section class="section dark"><div class="shell split"><div><h2>${esc(t.verified)}</h2><p class="lede light">${esc(t.specNote)}</p></div><dl class="specs"><div><dt>Model</dt><dd>BF65INOXP</dd></div><div><dt>Type</dt><dd>${l==='fr'?'Four à gaz':l==='ar'?'فرن غاز':'Gas oven'}</dd></div><div><dt>Finish</dt><dd>Inox</dd></div><div><dt>Doors</dt><dd>${l==='fr'?'Deux portes vitrées':l==='ar'?'بابان زجاجيان':'Two glazed doors'}</dd></div><div><dt>Warranty</dt><dd>${l==='fr'?'1 an':l==='ar'?'سنة واحدة':'1 year'}</dd></div><div><dt>Installation</dt><dd>${l==='fr'?'Non incluse':l==='ar'?'غير مشمول':'Not included'}</dd></div></dl></div></section><div class="mobile-buy"><span>BF65INOXP</span><a href="${RETAILER}">${esc(t.buy)}</a></div>`,0,schema)}
