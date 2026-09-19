@@ -58,7 +58,18 @@ test('every WhatsApp button targets the verified Digitronics number', async () =
       assert.ok(links.length > 0,`${path} should include a WhatsApp link`);
       for (const link of links) assert.equal(link,RETAILER.whatsapp.url,path);
       assert.doesNotMatch(html,/data-track="whatsapp_click" data-destination="whatsapp"/);
+      assert.match(html,/<svg class="whatsapp-icon"[^>]+aria-hidden="true"/);
+      assert.doesNotMatch(html,/>WA<\/a>/);
     }
+  }
+});
+
+test('homepages include a localized WhatsApp call to action', async () => {
+  for (const language of languages) {
+    const html = await readFile(root + language + '/index.html','utf8');
+    assert.match(html,/class="btn whatsapp whatsapp-btn" href="https:\/\/wa\.me\/212664999733\?text=/);
+    assert.match(html,/data-track="whatsapp_click" data-destination="Digitronics WhatsApp" data-product="BF65INOXP"/);
+    assert.doesNotMatch(html,/class="float"/,'homepage should not duplicate the hero WhatsApp action');
   }
 });
 
