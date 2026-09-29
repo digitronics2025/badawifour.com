@@ -5,3 +5,5 @@ dist/
 .env.*
 !.env.example
 .DS_Store
+.d1.json
+wrangler.deploy.json

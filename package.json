@@ -9,6 +9,7 @@
     "check": "npm run build && npm run test",
     "dev": "node scripts/dev-server.mjs",
     "deploy": "wrangler deploy",
+    "release": "wrangler d1 list --json > .d1.json && node scripts/make-production-config.mjs .d1.json && wrangler d1 migrations apply badawifour-prod --remote --config wrangler.deploy.json && wrangler deploy --config wrangler.deploy.json",
     "audit:prod": "node scripts/lighthouse-audit.mjs"
   },
   "devDependencies": {
