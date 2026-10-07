@@ -319,7 +319,9 @@ export default {
     // Production runs this Worker only for /api/* (assets.run_worker_first). Pages, files,
     // their headers and the / and alias redirects are served by Static Assets from
     // dist/_headers and dist/_redirects; HTTP->HTTPS and www->apex for those paths are
-    // zone settings (see README "Edge routing"). The fallback keeps local tooling working.
+    // zone settings (see README "Edge routing"). The fallback answers the one request that
+    // still lands here outside /api/* — a non-navigation miss such as a scanner probe —
+    // with the same 404 page, and keeps local tooling working.
     if(url.pathname.startsWith('/api/')) return api(request,env,url);
     return env.ASSETS.fetch(request);
   },
