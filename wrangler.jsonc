@@ -9,18 +9,7 @@
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "404-page",
     "run_worker_first": [
-      "/*",
-      "!/assets/*",
-      "!/brand/*",
-      "!/products/*",
-      "!/favicon.svg",
-      "!/favicon.ico",
-      "!/apple-touch-icon.png",
-      "!/manifest.webmanifest",
-      "!/sitemap.xml",
-      "!/robots.txt",
-      "!/.well-known/*",
-      "!/llms.txt"
+      "/api/*"
     ]
   },
   "observability": {

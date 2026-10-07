@@ -7,6 +7,7 @@ import sharp from 'sharp';
 import worker, { extractProduct, validateEmail, validatePhone, validateProductModel } from '../src/worker.mjs';
 import { GUIDES } from '../src/content.mjs';
 import { PRODUCTS, RETAILER } from '../src/catalog.mjs';
+import { SECURITY_HEADERS } from '../src/security-headers.mjs';
 
 const root = fileURLToPath(new URL('../dist/', import.meta.url));
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
@@ -329,16 +330,47 @@ test('BF65INOXP structured data retains BADAWI as the product brand', async () =
   assert.equal(data[0].brand.name,'BADAWI');
 });
 
-test('worker canonicalizes HTTP and www in one redirect', async () => {
+test('worker canonicalizes HTTP and www in one redirect for API requests', async () => {
   for (const input of [
-    'http://badawifour.com/ar/products/bf65inoxp/?source=test',
-    'http://www.badawifour.com/ar/products/bf65inoxp/?source=test',
-    'https://www.badawifour.com/ar/products/bf65inoxp/?source=test'
+    'http://badawifour.com/api/health?source=test',
+    'http://www.badawifour.com/api/health?source=test',
+    'https://www.badawifour.com/api/health?source=test'
   ]) {
     const response = await worker.fetch(new Request(input),{});
     assert.equal(response.status,301);
-    assert.equal(response.headers.get('location'),'https://badawifour.com/ar/products/bf65inoxp/?source=test');
+    assert.equal(response.headers.get('location'),'https://badawifour.com/api/health?source=test');
   }
+});
+
+test('worker runs only for /api/* and static edge files carry its former headers and redirects', async () => {
+  const config = JSON.parse(await readFile(projectRoot + 'wrangler.jsonc','utf8'));
+  assert.deepEqual(config.assets.run_worker_first,['/api/*']);
+  assert.equal(config.assets.not_found_handling,'404-page');
+
+  const api = await worker.fetch(new Request('https://badawifour.com/api/health'),{});
+  for (const [name,value] of Object.entries(SECURITY_HEADERS)) assert.equal(api.headers.get(name),value);
+
+  const headers = await readFile(root + '_headers','utf8');
+  const blocks = new Map(headers.trim().split(/\n\n/).map((block)=>{
+    const [path,...lines]=block.split('\n');
+    return [path,new Map(lines.map((line)=>{const i=line.indexOf(':');return [line.slice(0,i).trim(),line.slice(i+1).trim()]}))];
+  }));
+  for (const [name,value] of Object.entries(SECURITY_HEADERS)) assert.equal(blocks.get('/*').get(name),value);
+  assert.equal(blocks.get('/*').has('cache-control'),false,'a /* Cache-Control would be comma-joined onto every path');
+  for (const l of languages) assert.equal(blocks.get(`/${l}/*`).get('cache-control'),'public, max-age=300, s-maxage=1800');
+  for (const path of ['/assets/*','/brand/v1/*','/home/v1/*','/products/v1/*']) assert.equal(blocks.get(path).get('cache-control'),'public, max-age=31536000, immutable');
+
+  const redirects = (await readFile(root + '_redirects','utf8')).trim().split('\n').map((line)=>line.split(' '));
+  assert.deepEqual(redirects,[
+    ['/','/fr/','302'],
+    ['/fr/support/assistance/','/fr/support/request/','301'],
+    ['/en/support/assistance/','/en/support/request/','301'],
+    ['/ar/support/assistance/','/ar/support/request/','301'],
+    ['/fr/support/guides/nettoyage/','/fr/support/guides/clean-inox-glass/','301'],
+    ['/en/support/guides/cleaning/','/en/support/guides/clean-inox-glass/','301'],
+    ['/ar/support/guides/cleaning/','/ar/support/guides/clean-inox-glass/','301']
+  ]);
+  for (const [,to] of redirects) await access(root + to.slice(1) + 'index.html');
 });
 
 test('generated pages reference fingerprinted assets', async () => {
