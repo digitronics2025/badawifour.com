@@ -7,6 +7,7 @@ import sharp from 'sharp';
 import { HOME, T } from '../src/i18n.mjs';
 import { PRODUCTS, RETAILER as RETAILER_INFO } from '../src/catalog.mjs';
 import { GUIDES } from '../src/content.mjs';
+import { SECURITY_HEADERS } from '../src/security-headers.mjs';
 
 const OUT=fileURLToPath(new URL('../dist/',import.meta.url));
 const BRAND_SOURCE=fileURLToPath(new URL('../src/brand/v1/',import.meta.url));
@@ -599,37 +600,29 @@ await write('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns
 await write('robots.txt',`User-agent: *\nAllow: /\nDisallow: /api/\nSitemap: ${ORIGIN}/sitemap.xml\n`);
 await write('llms.txt',`# BADAWI FOUR\n\nOfficial BADAWI FOUR website for BADAWI appliances: ${ORIGIN}\n\n## Current verified products\n- BF65INOXP: 65 cm gas oven, inox finish, two glazed front doors. Installation is not included. Verified physical data: 65 × 55 × 55 cm; net weight 12 kg.\n- BF65CINOX: four-burner gas cooker, inox finish. Verified physical data: 60 × 60 × 90 cm (width × depth × height).\n- Exact gas connections, capacities and other unverified technical characteristics are intentionally not claimed until validated.\n\n## Languages\n- French: ${ORIGIN}/fr/\n- Arabic: ${ORIGIN}/ar/\n- English: ${ORIGIN}/en/\n\n## Support\n- Product registration and support are available under each language's /support/ section.\n- Current retailer: Digitronics.\n`);
 await write('.well-known/security.txt',`Contact: ${ORIGIN}/en/contact/\nCanonical: ${ORIGIN}/.well-known/security.txt\nExpires: 2027-09-19T00:00:00Z\nPreferred-Languages: en, fr, ar\nPolicy: ${ORIGIN}/en/privacy/\n`);
-await write('_headers',`/*
-  X-Frame-Options: DENY
-  X-Content-Type-Options: nosniff
-  Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
-  Cross-Origin-Opener-Policy: same-origin
-  Content-Security-Policy: default-src 'self'; img-src 'self' https://digitronics.ma data:; media-src 'self' https://digitronics.ma; connect-src 'self' https://cloudflareinsights.com; style-src 'self'; script-src 'self' https://static.cloudflareinsights.com; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://wa.me https://digitronics.ma; upgrade-insecure-requests
+// Static Assets serves every page and file without invoking the Worker
+// (wrangler.jsonc assets.run_worker_first is ["/api/*"]), so headers and redirects
+// that used to be set in src/worker.mjs live here. A header named by two matching
+// blocks is joined with a comma, so each path pattern below sets Cache-Control once.
+const HEADER_BLOCKS=[
+  ['/*',Object.entries(SECURITY_HEADERS)],
+  ...LANGS.map(l=>[`/${l}/*`,[['cache-control','public, max-age=300, s-maxage=1800']]]),
+  ...['/assets/*','/brand/v1/*','/home/v1/*','/products/v1/*'].map(path=>[path,[['cache-control','public, max-age=31536000, immutable']]]),
+  ...['/favicon.svg','/favicon.ico','/apple-touch-icon.png'].map(path=>[path,[['cache-control','public, max-age=86400']]]),
+  ['/manifest.webmanifest',[['cache-control','public, max-age=3600']]]
+];
+await write('_headers',HEADER_BLOCKS.map(([path,headers])=>`${path}\n${headers.map(([name,value])=>`  ${name}: ${value}`).join('\n')}\n`).join('\n'));
 
-/assets/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/brand/v1/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/home/v1/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/products/v1/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/favicon.svg
-  Cache-Control: public, max-age=86400
-
-/favicon.ico
-  Cache-Control: public, max-age=86400
-
-/apple-touch-icon.png
-  Cache-Control: public, max-age=86400
-
-/manifest.webmanifest
-  Cache-Control: public, max-age=3600
-`);
+// Older support URLs kept alive for backlinks. "/" picks the default locale.
+const REDIRECTS=[
+  ['/','/fr/',302],
+  ['/fr/support/assistance/','/fr/support/request/',301],
+  ['/en/support/assistance/','/en/support/request/',301],
+  ['/ar/support/assistance/','/ar/support/request/',301],
+  ['/fr/support/guides/nettoyage/','/fr/support/guides/clean-inox-glass/',301],
+  ['/en/support/guides/cleaning/','/en/support/guides/clean-inox-glass/',301],
+  ['/ar/support/guides/cleaning/','/ar/support/guides/clean-inox-glass/',301]
+];
+await write('_redirects',REDIRECTS.map(([from,to,code])=>`${from} ${to} ${code}`).join('\n')+'\n');
 
 console.log(`Built ${urls.length} localized pages with ${GUIDES.length} guides`);

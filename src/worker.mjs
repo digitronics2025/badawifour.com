@@ -1,4 +1,5 @@
 import { PRODUCTS, getProduct } from './catalog.mjs';
+import { SECURITY_HEADERS } from './security-headers.mjs';
 
 const MAX_UPLOAD = 6 * 1024 * 1024;
 const JSON_HEADERS = {'content-type':'application/json; charset=utf-8','cache-control':'no-store'};
@@ -9,18 +10,8 @@ const EVENT_ALLOWLIST = new Set([
   'professional_lead','contact_completed','guide_opened'
 ]);
 
-const securityHeaders = {
-  'strict-transport-security':'max-age=31536000; includeSubDomains; preload',
-  'x-content-type-options':'nosniff',
-  'referrer-policy':'strict-origin-when-cross-origin',
-  'permissions-policy':'camera=(), microphone=(), geolocation=(), payment=()',
-  'cross-origin-opener-policy':'same-origin',
-  'x-frame-options':'DENY',
-  'content-security-policy':"default-src 'self'; img-src 'self' https://digitronics.ma data:; media-src 'self' https://digitronics.ma; connect-src 'self' https://cloudflareinsights.com; style-src 'self'; script-src 'self' https://static.cloudflareinsights.com; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://wa.me https://digitronics.ma; upgrade-insecure-requests"
-};
-
 function json(data,status=200,extra={}){
-  return new Response(JSON.stringify(data),{status,headers:{...JSON_HEADERS,...securityHeaders,...extra}});
+  return new Response(JSON.stringify(data),{status,headers:{...JSON_HEADERS,...SECURITY_HEADERS,...extra}});
 }
 function clean(value,max=300){
   return String(value??'').trim().replace(/[\u0000-\u001F\u007F]/g,' ').slice(0,max);
@@ -325,25 +316,14 @@ export default {
     const url=new URL(request.url);
     const canonicalHost=url.hostname.startsWith('www.')?url.hostname.slice(4):url.hostname;
     if(url.protocol!=='https:'||canonicalHost!==url.hostname) return Response.redirect(`https://${canonicalHost}${url.pathname}${url.search}`,301);
-    if(url.pathname==='/') return Response.redirect(`${url.origin}/fr/`,302);
-
-    const aliases = new Map([
-      ['/fr/support/assistance/','/fr/support/request/'],
-      ['/en/support/assistance/','/en/support/request/'],
-      ['/ar/support/assistance/','/ar/support/request/'],
-      ['/fr/support/guides/nettoyage/','/fr/support/guides/clean-inox-glass/'],
-      ['/en/support/guides/cleaning/','/en/support/guides/clean-inox-glass/'],
-      ['/ar/support/guides/cleaning/','/ar/support/guides/clean-inox-glass/']
-    ]);
-    if(aliases.has(url.pathname)) return Response.redirect(`${url.origin}${aliases.get(url.pathname)}${url.search}`,301);
-
+    // Production runs this Worker only for /api/* (assets.run_worker_first). Pages, files,
+    // their headers and the / and alias redirects are served by Static Assets from
+    // dist/_headers and dist/_redirects; HTTP->HTTPS and www->apex for those paths are
+    // zone settings (see README "Edge routing"). The fallback answers the one request that
+    // still lands here outside /api/* — a non-navigation miss such as a scanner probe —
+    // with the same 404 page, and keeps local tooling working.
     if(url.pathname.startsWith('/api/')) return api(request,env,url);
-    const response=await env.ASSETS.fetch(request);
-    const headers=new Headers(response.headers);
-    for(const [key,value] of Object.entries(securityHeaders))headers.set(key,value);
-    if(url.pathname.startsWith('/assets/')) headers.set('cache-control','public, max-age=31536000, immutable');
-    else if(response.headers.get('content-type')?.includes('text/html')) headers.set('cache-control','public, max-age=300, s-maxage=1800');
-    return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
+    return env.ASSETS.fetch(request);
   },
   async scheduled(_event,env,ctx){
     ctx.waitUntil(cleanup(env));
