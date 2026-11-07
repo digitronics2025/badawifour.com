@@ -1,5 +1,5 @@
 ## Deploys — READ FIRST
-- GitHub Actions is DISABLED on this repo.
+- GitHub Actions is OFF for every workflow except the Claude fallback review (`.github/workflows/claude-fallback-review.yml`, managed from digitronics2025/claude-config).
   Do not create, edit or wait on workflows for deploys.
 - Release = push to `main`. Cloudflare Workers Builds deploys it (runs checks
   and D1 migrations). Confirm the build passed and check the live URL.
