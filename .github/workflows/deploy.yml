@@ -3,6 +3,12 @@ name: Deploy BADAWI to Cloudflare
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - AGENTS.md
+      - CLAUDE.md
+      - .github/copilot-instructions.md
+      - .continue/rules/shared-report.md
+      - .github/workflows/deploy.yml
   workflow_dispatch:
 
 permissions:
